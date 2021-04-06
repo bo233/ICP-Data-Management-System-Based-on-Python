@@ -20,8 +20,8 @@ class MainFrame(wx.Frame):
 
     def InitUI(self):
         self.SetBackgroundColour('white')
-
         self.scorePanel = wx.Panel(self)
+        self.Center(wx.BOTH)
         # scores = [89, 98, 70, 80, 60, 78, 85, 90]
         # sum = 0
         # for s in scores:
@@ -54,7 +54,7 @@ class MainFrame(wx.Frame):
 
 class MainApp(wx.App):
     def OnInit(self):
-        style = wx.DEFAULT_FRAME_STYLE ^ wx.MAXIMIZE_BOX
+        style = wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER
         self.frame = MainFrame(id=-1, title=u'颅内压数据管理系统', pos=(3600, 240), size=(1000, 600), style=style)
         self.frame.Show()
         return True
