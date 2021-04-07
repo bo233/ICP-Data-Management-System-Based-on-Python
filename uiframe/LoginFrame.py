@@ -2,6 +2,7 @@
 
 import wx
 from uiframe.MainFrame import MainApp
+from database.dbUtil import DBHelper
 
 
 class LoginFrame(wx.Frame):
@@ -32,13 +33,22 @@ class LoginFrame(wx.Frame):
             dlg.Close(True)
         dlg.Destroy()
 
+    # 登陆
     def OnClickLogin(self, event):
-        dlg = wx.MessageDialog(None, "登陆成功", "信息", wx.OK | wx.ICON_INFORMATION)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.Close(True)
-            app = MainApp()
-            app.MainLoop()
-        dlg.Destroy()
+        msg = ""
+        flag = 0
+        name = self.tUser.GetValue()
+        pwd = self.tPwd.GetValue()
+
+        if name == "" or pwd == "":
+            wx.MessageBox("用户名或密码不能为空！")
+        elif DBHelper.loginCheck(name, pwd):
+                wx.MessageBox("登陆成功！")
+                self.Close(True)
+                app = MainApp()
+                app.MainLoop()
+        else:
+            wx.MessageBox("用户名或密码错误！")
 
 
 class LoginApp(wx.App):
