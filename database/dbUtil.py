@@ -1,5 +1,8 @@
 #coding=utf-8
 import pymysql
+import datetime
+from util.DS import *
+
 
 class MySQLHelper:
     def __init__(self):
@@ -36,6 +39,7 @@ class MySQLHelper:
             self.conn.rollback()
 
     def fetchone(self, sql, params=[]):
+        self.init()
         #一次只返回一行查询到的数据
         try:
             cs1 = self.conn.cursor()
@@ -51,6 +55,7 @@ class MySQLHelper:
             print("None", e)
 
     def fetchall(self,sql,params):
+        self.init()
         #接收全部的返回结果行
         #返回查询到的全部结果值
         try:
@@ -64,33 +69,54 @@ class MySQLHelper:
         except Exception as e:
             print("None", e)
 
-    def loginCheck(self, d_id, pwd):
+    def loginCheck(self, id, pwd):
         self.init()
         sql = "SELECT d_pwd from doctor_tbl where d_id = %s"
-        params = [d_id]
+        params = [id]
         flag = False
         res = self.fetchone(sql, params)
         if res is not None and res[0] == pwd:
             flag = True
         return flag
 
-    def idExist(self, d_id):
+    def docIdExist(self, id):
         self.init()
         sql = "SELECT d_name from doctor_tbl where d_id = %s"
-        params = [d_id]
+        params = [id]
         flag = False
         res = self.fetchone(sql, params)
         if res is not None:
             flag = True
         return flag
 
-    def register(self, id, name, tel, pwd):
+    def docRegister(self, id, name, tel, pwd):
         self.init()
         sql = 'INSERT INTO doctor_tbl values(%s,%s,%s,%s)'
         params = [id, name, tel, pwd]
         row = self.insert(sql, params)
         # return row is not None
         return True
+
+    def getPtData(self, id:str):
+        # get info
+        sql = 'SELECT * from patient_tbl where p_id = %s'
+        params = [id]
+        tInfo = self.fetchone(sql, params)
+        if tInfo is None: return None
+        info = list(tInfo)
+        ptData = PtData(int(id), str(info[1]), int(info[2]), str(info[3]))
+
+        # get consultations
+        sql = 'SELECT * from consultation_tbl where p_id = %s'
+        params = [id]
+        rows = self.fetchall(sql, params)
+        for res in rows:
+            cons = Cons(res[2], res[3], res[4])
+            ptData.cons.append(cons)
+
+        return ptData
+
+
 
 
 DBHelper = MySQLHelper()

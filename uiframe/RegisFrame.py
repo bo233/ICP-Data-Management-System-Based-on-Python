@@ -55,9 +55,9 @@ class RegisFrame(wx.Frame):
             wx.MessageBox("信息不能为空！")
         elif pwd != pwd2:
             wx.MessageBox("两次密码不一致！")
-        elif DBHelper.idExist(id):
+        elif DBHelper.docIdExist(id):
             wx.MessageBox("用户名已存在！")
-        elif DBHelper.register(id, name, tel, encode):
+        elif DBHelper.docRegister(id, name, tel, encode):
             wx.MessageBox("注册成功！")
             self.Close(True)
             LoginFrame.main()
