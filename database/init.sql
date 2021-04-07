@@ -1,7 +1,7 @@
 use ICP_db;
 
 CREATE TABLE IF NOT EXISTS `doctor_tbl`(
-   `d_id` INT UNSIGNED AUTO_INCREMENT,
+   `d_id` VARCHAR(20) NOT NULL,
    `d_name` VARCHAR(20) NOT NULL,
    `d_tel` VARCHAR(20) NOT NULL,
    `d_pwd` VARCHAR(255) NOT NULL,

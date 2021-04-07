@@ -1,7 +1,9 @@
 # coding=utf-8
 
 import wx
+import hashlib
 from uiframe.MainFrame import MainApp
+from uiframe.RegisFrame import RegisApp
 from database.dbUtil import DBHelper
 
 
@@ -27,22 +29,23 @@ class LoginFrame(wx.Frame):
         self.bReg.Bind(wx.EVT_BUTTON, self.OnClickReg)
         self.bLogin.Bind(wx.EVT_BUTTON, self.OnClickLogin)
 
+    # 注册
     def OnClickReg(self, event):
-        dlg = wx.MessageDialog(None, "开发中，敬请期待。", "信息", wx.OK | wx.ICON_INFORMATION)
-        if dlg.ShowModal() == wx.ID_OK:
-            dlg.Close(True)
-        dlg.Destroy()
+        self.Close(True)
+        app = RegisApp()
+        app.MainLoop()
 
     # 登陆
     def OnClickLogin(self, event):
-        msg = ""
-        flag = 0
         name = self.tUser.GetValue()
         pwd = self.tPwd.GetValue()
+        md5 = hashlib.md5()
+        md5.update(pwd.encode('utf-8'))
+        encode = str(md5.hexdigest())
 
         if name == "" or pwd == "":
             wx.MessageBox("用户名或密码不能为空！")
-        elif DBHelper.loginCheck(name, pwd):
+        elif DBHelper.loginCheck(name, encode):
                 wx.MessageBox("登陆成功！")
                 self.Close(True)
                 app = MainApp()

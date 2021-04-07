@@ -4,6 +4,6 @@ from uiframe.LoginFrame import LoginApp
 from database.dbUtil import DBHelper
 
 
-DBHelper.init()
+# DBHelper.init()
 app = LoginApp()
 app.MainLoop()

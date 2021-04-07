@@ -19,6 +19,7 @@ class MySQLHelper:
 
     def __cud(self,sql,params=[]):
         try:
+            self.conn.ping(reconnect=True)
             #用来获得python执行Mysql命令的方法,也就是我们所说的操作游标
             #cursor 方法将我们引入另外一个主题：游标对象。通过游标扫行SQL 查询并检查结果。
             #游标连接支持更多的方法，而且可能在程序中更好用。
@@ -34,7 +35,7 @@ class MySQLHelper:
             print(e)
             self.conn.rollback()
 
-    def fetchone(self, sql, params=[] ):
+    def fetchone(self, sql, params=[]):
         #一次只返回一行查询到的数据
         try:
             cs1 = self.conn.cursor()
@@ -64,6 +65,7 @@ class MySQLHelper:
             print("None", e)
 
     def loginCheck(self, d_id, pwd):
+        self.init()
         sql = "SELECT d_pwd from doctor_tbl where d_id = %s"
         params = [d_id]
         flag = False
@@ -71,6 +73,24 @@ class MySQLHelper:
         if res is not None and res[0] == pwd:
             flag = True
         return flag
+
+    def idExist(self, d_id):
+        self.init()
+        sql = "SELECT d_name from doctor_tbl where d_id = %s"
+        params = [d_id]
+        flag = False
+        res = self.fetchone(sql, params)
+        if res is not None:
+            flag = True
+        return flag
+
+    def register(self, id, name, tel, pwd):
+        self.init()
+        sql = 'INSERT INTO doctor_tbl values(%s,%s,%s,%s)'
+        params = [id, name, tel, pwd]
+        row = self.insert(sql, params)
+        # return row is not None
+        return True
 
 
 DBHelper = MySQLHelper()
