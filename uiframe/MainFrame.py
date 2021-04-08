@@ -47,6 +47,7 @@ class MainFrame(wx.Frame):
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
         self.bClear.Bind(wx.EVT_BUTTON, self.OnClickClear)
+        self.bSave.Bind(wx.EVT_BUTTON, self.OnClickSave)
 
         # hbox1.Add(tId, proportion=1)
         # pntInfoBox.Add(hbox1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=5)
@@ -94,8 +95,9 @@ class MainFrame(wx.Frame):
     def OnClickSave(self, event):
         symp = self.tSymp.GetValue()
         diag = self.tDiag.GetValue()
-
-
+        cons = Cons(datetime.date.today(), symp, diag)
+        DBHelper.addPtCons(self.pId, cons)
+        wx.MessageBox("保存成功！")
 
 
 class MainApp(wx.App):

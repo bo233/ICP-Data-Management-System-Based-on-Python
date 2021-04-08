@@ -11,18 +11,13 @@ class MySQLHelper:
     def init(self,host='localhost',port=3306,db='ICP_db',user='bo233',passwd='123456',charset='utf8'):
         self.conn=pymysql.connect(host=host,port=port,db=db,user=user,passwd=passwd,charset=charset)
 
-    def insert(self,sql,params):
-        return self.__cud(sql,params)
-
-    def update(self,sql,params):
-        return self.__cud(sql,params)
-
-    def delete(self,sql,params):
+    def exec(self, sql, params):
         return self.__cud(sql,params)
 
     def __cud(self,sql,params=[]):
+        self.init()
         try:
-            self.conn.ping(reconnect=True)
+            # self.conn.ping(reconnect=True)
             #用来获得python执行Mysql命令的方法,也就是我们所说的操作游标
             #cursor 方法将我们引入另外一个主题：游标对象。通过游标扫行SQL 查询并检查结果。
             #游标连接支持更多的方法，而且可能在程序中更好用。
@@ -70,7 +65,7 @@ class MySQLHelper:
             print("None", e)
 
     def loginCheck(self, id, pwd):
-        self.init()
+        # self.init()
         sql = "SELECT d_pwd from doctor_tbl where d_id = %s"
         params = [id]
         flag = False
@@ -80,7 +75,7 @@ class MySQLHelper:
         return flag
 
     def docIdExist(self, id):
-        self.init()
+        # self.init()
         sql = "SELECT d_name from doctor_tbl where d_id = %s"
         params = [id]
         flag = False
@@ -90,10 +85,10 @@ class MySQLHelper:
         return flag
 
     def docRegister(self, id, name, tel, pwd):
-        self.init()
+        # self.init()
         sql = 'INSERT INTO doctor_tbl values(%s,%s,%s,%s)'
         params = [id, name, tel, pwd]
-        row = self.insert(sql, params)
+        row = self.exec(sql, params)
         # return row is not None
         return True
 
@@ -116,7 +111,10 @@ class MySQLHelper:
 
         return ptData
 
-
+    def addPtCons(self, id, consultations:Cons):
+        sql = 'INSERT into consultation_tbl (p_id,c_date,symptom, diagnosis) values(%s, %s, %s, %s)'
+        params = [id, str(consultations.date), consultations.sx, consultations.diag]
+        self.exec(sql, params)
 
 
 DBHelper = MySQLHelper()
