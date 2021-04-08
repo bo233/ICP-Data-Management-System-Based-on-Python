@@ -2,8 +2,10 @@
 
 import wx
 import numpy
+import time
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import datetime
 from util.dataproc import *
 from util.DS import *
@@ -14,36 +16,44 @@ class MainFrame(wx.Frame):
     def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
-
         self.InitUI()
-        pass
 
     def InitUI(self):
         self.SetBackgroundColour('white')
-        panel = wx.Panel(self)
+        # self.panel = wx.Panel(self)
+        self.panel = FigureCanvas(self, -1, Figure())
         self.Center(wx.BOTH)
 
-        self.lPntInfo = wx.StaticText(panel, label="患者信息", pos=(960, 50))
+        # 相关变量定义
+        self.sclPos = 0              # 滑块位置
+        self.sclSize = 100           # 滑块大小
+        self.SCLLEN = 1000           # 滑块总长度
+        self.axLen  = 0              # 长度
+        self.axRange = [0, 10000]    # 显示范围
+        self.dataLen = 0             # 数据总长度
+
+        # 患者信息控件
+        self.lPntInfo = wx.StaticText(self.panel, label="患者信息", pos=(960, 50))
         # pntInfoBox = wx.BoxSizer(wx.VERTICAL)
         # hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.lId = wx.StaticText(panel, label='ID：', pos=(900, 80))
+        self.lId = wx.StaticText(self.panel, label='ID：', pos=(900, 80))
         # hbox1.Add(lId, flag=wx.RIGHT, border=5)
-        self.tId = wx.TextCtrl(panel, size=(130, 25), pos=(940, 80))
-        self.bId = wx.Button(panel, label='查询', pos=(1080, 80))
-        self.lName = wx.StaticText(panel, label='姓名：', pos=(900, 120))
-        self.tName = wx.StaticText(panel, pos=(940, 120))
-        self.lAge = wx.StaticText(panel, label='年龄：', pos=(900, 160))
-        self.tAge = wx.StaticText(panel, pos=(940,160))
-        self.lGen = wx.StaticText(panel, label='性别：', pos=(900, 200))
-        self.tGen = wx.StaticText(panel, pos=(940, 200))
-        self.lSymp = wx.StaticText(panel, label='症状：', pos=(900, 240))
-        self.tSymp = wx.TextCtrl(panel, size=(240, 200), pos=(940, 240), style=wx.TE_MULTILINE)
-        self.lDiag = wx.StaticText(panel, label='诊断：', pos=(900, 460))
-        self.tDiag = wx.TextCtrl(panel, size=(240, 200), pos=(940, 460), style=wx.TE_MULTILINE)
-        self.lDate = wx.StaticText(panel, label='日期：', pos=(900, 680))
-        self.tDate = wx.StaticText(panel, label=str(datetime.date.today()), pos=(940, 680))
-        self.bSave = wx.Button(panel, label='保存', pos=(920, 740))
-        self.bClear = wx.Button(panel, label='清除', pos=(1040, 740))
+        self.tId = wx.TextCtrl(self.panel, size=(130, 25), pos=(940, 80))
+        self.bId = wx.Button(self.panel, label='查询', pos=(1080, 80))
+        self.lName = wx.StaticText(self.panel, label='姓名：', pos=(900, 120))
+        self.tName = wx.StaticText(self.panel, pos=(940, 120))
+        self.lAge = wx.StaticText(self.panel, label='年龄：', pos=(900, 160))
+        self.tAge = wx.StaticText(self.panel, pos=(940,160))
+        self.lGen = wx.StaticText(self.panel, label='性别：', pos=(900, 200))
+        self.tGen = wx.StaticText(self.panel, pos=(940, 200))
+        self.lSymp = wx.StaticText(self.panel, label='症状：', pos=(900, 240))
+        self.tSymp = wx.TextCtrl(self.panel, size=(240, 200), pos=(940, 240), style=wx.TE_MULTILINE)
+        self.lDiag = wx.StaticText(self.panel, label='诊断：', pos=(900, 460))
+        self.tDiag = wx.TextCtrl(self.panel, size=(240, 200), pos=(940, 460), style=wx.TE_MULTILINE)
+        self.lDate = wx.StaticText(self.panel, label='日期：', pos=(900, 680))
+        self.tDate = wx.StaticText(self.panel, label=str(datetime.date.today()), pos=(940, 680))
+        self.bSave = wx.Button(self.panel, label='保存', pos=(920, 740))
+        self.bClear = wx.Button(self.panel, label='清除', pos=(1040, 740))
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
         self.bClear.Bind(wx.EVT_BUTTON, self.OnClickClear)
@@ -56,26 +66,55 @@ class MainFrame(wx.Frame):
 
         # panel.SetSizer(pntInfoBox)
 
+        # 波形图
         data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
         scores = []
         for i in data:
             scores.append(i.icp)
-        t_score = numpy.arange(1, len(scores) + 1, 1)
-        s_score = numpy.array(scores)
+        self.t_score = numpy.arange(1, len(scores) + 1, 1)
+        self.s_score = numpy.array(scores)
 
-        self.waveGraph = Figure()
-        self.waveGraph.set_figheight(6)
-        self.waveGraph.set_figwidth(9)
-        self.axes_score = self.waveGraph.add_subplot(111)
+        self.dataLen = len(scores)
 
-        self.axes_score.plot(t_score, s_score, 'ro', t_score, s_score, 'k')
-        # self.axes_score.axhline(y=average, color='r')
-        # self.axes_score.set_title(u'My Scores')
-        self.axes_score.grid(True)
-        self.axes_score.set_xlabel('Data')
-        self.axes_score.set_ylabel('ICP')
-        FigureCanvas(panel, -1, self.waveGraph)
+        # self.figure = Figure()
+        # self.figure, self.axes = plt.subplots()
+        # self.figure.set_figheight(6)
+        # self.figure.set_figwidth(9)
+        # self.axes = self.figure.axes()
+        # self.axes = self.figure.add_subplot(111)
+        self.axes = self.panel.figure.add_subplot(111)
+        self.panel.figure.subplots_adjust(left=0.1, bottom=0.4, right=0.7, top=0.9 )
+        self.axes.plot(self.t_score, self.s_score, 'k')
+        self.axes.grid(True)
+        self.axes.set_xlabel('Time')
+        self.axes.set_ylabel('ICP')
+        self.axes.set_xlim(self.axRange)
+        self.panel.draw()
 
+        # FigureCanvas(self.panel, -1, self.figure)
+
+        # 滚动条相关
+        self.scrollBar = wx.ScrollBar(self.panel, id = -1, pos=(150, 600), size=(620, 20),
+                                      style=wx.SB_HORIZONTAL)
+        self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
+        self.scrollBar.Bind(wx.EVT_SCROLL, self.OnScroll)
+        self.bSclSub = wx.Button(self.panel, label='-', pos=(130, 600), size=(20, 20))
+        self.bSclAdd = wx.Button(self.panel, label='+', pos=(770,600), size=(20, 20))
+        self.bSclAdd.Bind(wx.EVT_BUTTON, self.OnClickAdd)
+        self.bSclSub.Bind(wx.EVT_BUTTON, self.OnClickSub)
+
+    # 刷新波形图
+    def refresh(self):
+        l = self.dataLen * self.sclPos / self.SCLLEN
+        r = self.dataLen * (self.sclPos + self.sclSize) / self.SCLLEN
+        self.axRange = [l, r]
+        self.axes.cla()
+        self.axes.grid(True)
+        self.axes.set_xlim(self.axRange)
+        self.axes.plot(self.t_score, self.s_score, 'k')
+        self.panel.draw()
+
+    # 查询ID按钮
     def OnClickId(self, event):
         self.pId = str(self.tId.GetValue())
         if self.pId.isdigit():
@@ -88,16 +127,44 @@ class MainFrame(wx.Frame):
                 # self.tSymp.SetValue(ptData.cons[0].sx)
                 # self.tDate.SetLabel(str(ptData.cons[0].date))
 
+    # 清除按钮
     def OnClickClear(self, event):
         self.tSymp.SetValue("")
         self.tDiag.SetValue("")
 
+    # 保存按钮
     def OnClickSave(self, event):
         symp = self.tSymp.GetValue()
         diag = self.tDiag.GetValue()
         cons = Cons(datetime.date.today(), symp, diag)
         DBHelper.addPtCons(self.pId, cons)
         wx.MessageBox("保存成功！")
+
+    # 滚动条响应
+    def OnScroll(self, event):
+        self.sclPos = self.scrollBar.GetThumbPosition()
+        self.refresh()
+        time.sleep(0.05)
+        # print(self.sclPos)
+
+    # +按钮响应
+    def OnClickAdd(self, event):
+
+        self.sclSize -= 100
+        if self.sclSize < 100:
+            self.sclSize = 100
+        self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
+        self.refresh()
+
+    # -按钮响应
+    def OnClickSub(self, event):
+        self.sclSize += 100
+        if self.sclSize > 1000:
+            self.sclSize = 1000
+        if self.sclPos > 1000 - self.sclSize:
+            self.sclPos = 1000 - self.sclSize
+        self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
+        self.refresh()
 
 
 class MainApp(wx.App):
