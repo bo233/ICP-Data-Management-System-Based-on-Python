@@ -23,6 +23,7 @@ class MainFrame(wx.Frame):
         # self.panel = wx.Panel(self)
         self.panel = FigureCanvas(self, -1, Figure())
         self.Center(wx.BOTH)
+        # wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL)
 
         # 相关变量定义
         self.sclPos = 0              # 滑块位置
@@ -103,6 +104,8 @@ class MainFrame(wx.Frame):
         self.bSclAdd.Bind(wx.EVT_BUTTON, self.OnClickAdd)
         self.bSclSub.Bind(wx.EVT_BUTTON, self.OnClickSub)
 
+        self.bCon = wx.Button(self.panel, label='连接设备', pos=(200, 700))
+
     # 刷新波形图
     def refresh(self):
         l = self.dataLen * self.sclPos / self.SCLLEN
@@ -113,6 +116,7 @@ class MainFrame(wx.Frame):
         self.axes.set_xlim(self.axRange)
         self.axes.plot(self.t_score, self.s_score, 'k')
         self.panel.draw()
+        time.sleep(0.01)
 
     # 查询ID按钮
     def OnClickId(self, event):
@@ -144,7 +148,7 @@ class MainFrame(wx.Frame):
     def OnScroll(self, event):
         self.sclPos = self.scrollBar.GetThumbPosition()
         self.refresh()
-        time.sleep(0.05)
+        # time.sleep(0.05)
         # print(self.sclPos)
 
     # +按钮响应
