@@ -31,7 +31,8 @@ class ICPFrame(wx.Frame):
     def InitUI(self):
         self.SetBackgroundColour('Black')
         # self.panel = wx.Panel(self)
-        self.panel = FigureCanvas(self, -1, Figure(facecolor=(0.2, 0.2, 0.2)))
+        self.figure = Figure(facecolor=(0.2, 0.2, 0.2))
+        self.panel = FigureCanvas(self, -1, self.figure)
         self.panel.SetBackgroundColour('Black')
         self.Center(wx.BOTH)
 
@@ -131,7 +132,7 @@ class ICPFrame(wx.Frame):
         self.axLen = 0  # 长度
         self.axRange = [0, 10000]  # 显示范围
         self.dataLen = 0  # 数据总长度
-        self.latestData: Data = None
+        self.latestData = Data(datetime.datetime.now(), 0, 0)
         self.simuI = 0
         self.DAYVIEWLEN = 86400
         self.HOURVIEWLEN = 10800
@@ -139,7 +140,7 @@ class ICPFrame(wx.Frame):
         # 数据
         self.datas = []
         self.icps = [0]*1000
-        self.dates = ['']*1000
+        self.dates = numpy.array(range(0, 1000))
         # for i in range(0, 100):
         #     self.icps.append(self.datas[i].icp)
         #     self.dates.append(str(self.datas[i].date))
@@ -150,9 +151,9 @@ class ICPFrame(wx.Frame):
         self.x = numpy.array(self.icps)
         self.dataLen = len(self.icps)
         # 坐标轴
-        self.ax = self.panel.figure.add_subplot(111)
+        self.ax = self.figure.add_subplot(111)
         self.ax.set_facecolor('black')
-        self.panel.figure.subplots_adjust(left=0.05, bottom=0.3, right=0.75, top=0.9 )
+        self.figure.subplots_adjust(left=0.05, bottom=0.3, right=0.75, top=0.9 )
         # self.panel.figure.set_size_inches(0.2, 0.2)
         # self.ax.plot(self.y, self.x, '-g')
         self.line, = self.ax.plot([], [], '-g')
@@ -165,7 +166,7 @@ class ICPFrame(wx.Frame):
         self.ax.set_yticks([0, 5, 10, 15, 20, 25, 30], minor=True)
         # my_y_ticks = numpy.arange(0, 30, 5)
         # plt.yticks(my_y_ticks)
-        self.panel.figure.autofmt_xdate()
+        self.figure.autofmt_xdate()
         # self.axes.set_xlim(self.axRange)
         # self.panel.draw()
         # plt.show()
@@ -222,22 +223,22 @@ class ICPFrame(wx.Frame):
         # while True:
         self.icps[:] = numpy.roll(self.icps, -1)
         self.icps[-1] = self.latestData.icp
-        self.dates[:] = numpy.roll(self.dates, -1)
-        self.dates[-1] = str(self.latestData.date)
+        # self.dates[:] = numpy.roll(self.dates, -1)
+        # self.dates[-1] = str(self.latestData.date)
         self.line.set_data(self.dates, self.icps)
         # self.ax.set_data(())
-        print(self.icps[-1])
+        # print(self.icps[-1])
         # yield self.icps
         return self.line,
 
     # 开始实时显示
     def steamingDisp(self):
-        ani = animation.FuncAnimation(self.panel.figure, self.updataData, interval=1000)
+        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=False)
         plt.show()
 
     def OnClickConDev(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
-        path = ""
+
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetValue()
             self.dHelper = DataHelper(path)
@@ -255,9 +256,9 @@ class ICPFrame(wx.Frame):
 
     def OnClickSimuCon(self, evt):
         self.datas = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
-        ani = animation.FuncAnimation(self.panel.figure, self.updataData, interval=1000, blit=False)
-        plt.show()
         self.timer_simu.Start(1000)
+        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
+        # plt.show()
         print('OnClickSimuCon')
 
 
