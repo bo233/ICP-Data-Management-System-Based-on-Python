@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdata
+import matplotlib.dates as mdates
 import matplotlib.animation as animation
 from matplotlib.dates import AutoDateLocator
 import datetime
@@ -129,59 +129,81 @@ class ICPFrame(wx.Frame):
 
         # ####### 波形图
         # 变量
-        self.axLen = 0  # 长度
-        self.axRange = [0, 10000]  # 显示范围
-        self.dataLen = 0  # 数据总长度
+        MAXDATALEN = 86400
+        self.DAYVIEWLEN = 86400
+        self.HOUR3VIEWLEN = 10800
+        self.MIN30VIEWLEN = 1800
+        self.MIN5VIEWLEN = 300
+        self.axisxLen = self.MIN5VIEWLEN  # x轴长度
+        # self.dataLen = 0  # 数据总长度
         self.latestData = Data(datetime.datetime.now(), 0, 0)
         self.simuI = 0
-        self.DAYVIEWLEN = 86400
-        self.HOURVIEWLEN = 10800
-        self.MINVIEWLEN = 1800
+
         # 数据
         self.datas = []
-        self.icps = [0]*1000
-        self.dates = numpy.array(range(0, 1000))
-        # for i in range(0, 100):
-        #     self.icps.append(self.datas[i].icp)
-        #     self.dates.append(str(self.datas[i].date))
-        # for i in data:
-        #     icps.append(i.icp)
-        #     dates.append(str(i.date))
-        self.y = numpy.array(self.dates)
-        self.x = numpy.array(self.icps)
-        self.dataLen = len(self.icps)
+        self.icps = [0] * self.MIN5VIEWLEN
+        # self.dates = [numpy.array(range(0, 1000))]
+        st_time = datetime.datetime(2021, 1, 1, 0, 0, 0)
+        ed_time = datetime.datetime(2021, 1, 1, 0, 4, 59, 500)
+        delta = datetime.timedelta(seconds=1)
+        self.dates = mdates.drange(st_time, ed_time, delta)
+        # self.dates = mdates.num2date(self.dates)
+        # self.dataLen = len(self.icps)
         # 坐标轴
         self.ax = self.figure.add_subplot(111)
         self.ax.set_facecolor('black')
-        self.figure.subplots_adjust(left=0.05, bottom=0.3, right=0.75, top=0.9 )
+        self.figure.subplots_adjust(left=0.05, bottom=0.3, right=0.75, top=0.9)
         # self.panel.figure.set_size_inches(0.2, 0.2)
-        # self.ax.plot(self.y, self.x, '-g')
-        self.line, = self.ax.plot([], [], '-g')
-        # self.ax.fill_between(self.y, self.x, 0, color='g', alpha=0.7)
-        self.ax.hlines(self.alarmThreshold, 0, self.dataLen, color='#FF9912')
+        # TODO len error
+        # self.ax.hlines(self.alarmThreshold, 0, self.MIN5VIEWLEN, color='#FF9912')
         self.ax.grid(True, c='gray')
         self.ax.tick_params(axis='x', colors='white')
         self.ax.tick_params(axis='y', colors='white')
+        self.line, = self.ax.plot_date(self.dates, [None]*self.MIN5VIEWLEN, '-g')
+        # self.ax.set_yticks([0, 5, 10, 15, 20, 25, 30], minor=True)
         self.ax.set_yticks([0, 10, 20, 30])
-        self.ax.set_yticks([0, 5, 10, 15, 20, 25, 30], minor=True)
+        self.ax.set_ylim(0, 30)
+
+        # 根据自己定义的方式去画时间刻度
+        # formatter = plt.FuncFormatter(self.time_ticks)
+        formatter = mdates.DateFormatter("%H:%M")
+        # 在图中应用自定义的时间刻度
+        self.ax.xaxis.set_major_formatter(formatter)
+        # minticks 需要指出，值的大小决定了图是否能按 10min 为单位显示
+        # 值越小可能只能按小时间隔显示
+        # locator = AutoDateLocator(minticks=20)
+        # pandas 只生成了满足 10min 的 x 的值，而指定坐标轴以多少的时间间隔画的是下面的这行代码
+        # 如果是小时，需要在上面导入相应的东东 YEARLY, MONTHLY, DAILY, HOURLY, MINUTELY, SECONDLY, MICROSECONDLY
+        # 并按照下面的格式照葫芦画瓢
+        # locator.intervald[mdates.SECONDLY] = [1]  # 10min 为间隔
+        # self.ax.xaxis.set_major_locator(locator=locator)
+        # self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+        # self.ax.xaxis.set_major_locator(mdates.MinuteLocator())
         # my_y_ticks = numpy.arange(0, 30, 5)
         # plt.yticks(my_y_ticks)
-        self.figure.autofmt_xdate()
-        # self.axes.set_xlim(self.axRange)
-        # self.panel.draw()
-        # plt.show()
+        # self.figure.autofmt_xdate()
+        # self.ax.set_xlim([MAXDATALEN-self.MIN5VIEWLEN, MAXDATALEN-1])
 
-    # 刷新波形图
-    # def refresh(self):
-    #     l = self.dataLen * self.sclPos / self.SCLLEN
-    #     r = self.dataLen * (self.sclPos + self.sclSize) / self.SCLLEN
-    #     self.axRange = [l, r]
-    #     self.ax.cla()
-    #     self.ax.grid(True)
-    #     self.ax.set_xlim(self.axRange)
-    #     self.ax.plot(self.y, '-g')
-    #     self.panel.draw()
-    #     time.sleep(0.01)
+
+    # 自定义时间刻度如何显示
+    def time_ticks(x, pos):
+        # 在 pandas 中，按 10min 生成的时间序列与 matplotlib 要求的类型不一致
+        # 需要转换成 matplotlib 支持的类型
+        x = mdates.num2date(x)
+
+        # 时间坐标是从坐标原点到结束一个一个标出的
+        # 如果是坐标原点的那个刻度则用下面的要求标出刻度
+        if pos == 0:
+            # %Y-%m-%d
+            # 时间格式化的标准是按 2020-10-01 10:10:10 标记的
+            fmt = '%Y-%m-%d %H:%M:%S'
+        # 如果不是是坐标原点的那个刻度则用下面的要求标出刻度
+        else:
+            # 时间格式化的标准是按 10:10:10 标记的
+            fmt = '%H:%M:%S'
+        # 根据 fmt 的要求画时间刻度
+        label = x.strftime(fmt)
+        return label
 
     # 时间更新
     def timeFresh(self, evt):
@@ -223,18 +245,19 @@ class ICPFrame(wx.Frame):
         # while True:
         self.icps[:] = numpy.roll(self.icps, -1)
         self.icps[-1] = self.latestData.icp
-        # self.dates[:] = numpy.roll(self.dates, -1)
-        # self.dates[-1] = str(self.latestData.date)
+        self.dates[:] = numpy.roll(self.dates, -1)
+        self.dates[-1] = mdates.date2num(self.latestData.date)
+        print(str(self.latestData.date), self.dates[-1], self.icps[-1])
         self.line.set_data(self.dates, self.icps)
-        # self.ax.set_data(())
-        # print(self.icps[-1])
-        # yield self.icps
-        return self.line,
+        self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
+        self.tICP.SetLabel(str(self.latestData.icp))
+        self.tTemp.SetLabel("%.1f"%(self.latestData.ict))
+        self.ax.set_xlim([self.dates[0], self.dates[-1]])
+        return self.line, self.p,
 
     # 开始实时显示
     def steamingDisp(self):
-        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=False)
-        plt.show()
+        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
 
     def OnClickConDev(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
@@ -256,10 +279,14 @@ class ICPFrame(wx.Frame):
 
     def OnClickSimuCon(self, evt):
         self.datas = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
+        self.latestData = self.datas[0]
+        self.simuI += 1
         self.timer_simu.Start(1000)
+        delta = datetime.timedelta(minutes=4, seconds=59, microseconds=500)
+        ed_time = self.latestData.date
+        st_time = ed_time - delta
+        self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
         self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
-        # plt.show()
-        print('OnClickSimuCon')
 
 
 class ICPApp(wx.App):

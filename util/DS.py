@@ -28,6 +28,10 @@ class DatatimeFormat:
         s = struct.pack("=H5B", self.year, self.month, self.day, self.hour, self.minute, self.second)
         return s
 
+    def toDatetime(self):
+        d = datetime.datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)
+        return d
+
 
 class Data:
     def __init__(self, date:datetime, icp, ict):

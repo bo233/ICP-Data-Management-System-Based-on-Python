@@ -28,8 +28,7 @@ def read(path):
         y = int.from_bytes(sYear, byteorder="little", signed=False)
         ict = sIct1 / 10 + sIct2 / 10
 
-        date = DatatimeFormat()
-        date.set(y, m, d, h, mi, s)
+        date = datetime.datetime(y, m, d, h, mi, s)
         data = Data(date, icp, ict)
         dataList.append(data)
 
