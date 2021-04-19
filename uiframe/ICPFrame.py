@@ -114,17 +114,25 @@ class ICPFrame(wx.Frame):
         self.bSimuCon.SetBackgroundColour('#707070')
         self.bSimuCon.Bind(wx.EVT_BUTTON, self.OnClickSimuCon)
 
-        self.bDayView = GenButton(self.panel, label='日期视图', pos=(100, 680), style=wx.BORDER_NONE)
+        self.bDayView = GenButton(self.panel, label='天视图', pos=(100, 680), style=wx.BORDER_NONE)
         self.bDayView.SetForegroundColour('white')
         self.bDayView.SetBackgroundColour('#707070')
+        self.bDayView.Bind(wx.EVT_BUTTON, self.OnClickDayView)
 
-        self.bHourView = GenButton(self.panel, label='小时视图', pos=(250, 680), style=wx.BORDER_NONE)
+        self.bHourView = GenButton(self.panel, label='3小时视图', pos=(250, 680), style=wx.BORDER_NONE)
         self.bHourView.SetForegroundColour('white')
         self.bHourView.SetBackgroundColour('#707070')
+        self.bHourView.Bind(wx.EVT_BUTTON, self.OnClickHourView)
 
-        self.bMinView = GenButton(self.panel, label='分钟视图', pos=(400, 680), style=wx.BORDER_NONE)
-        self.bMinView.SetForegroundColour('white')
-        self.bMinView.SetBackgroundColour('#707070')
+        self.bMin30View = GenButton(self.panel, label='30分钟视图', pos=(400, 680), style=wx.BORDER_NONE)
+        self.bMin30View.SetForegroundColour('white')
+        self.bMin30View.SetBackgroundColour('#707070')
+        self.bMin30View.Bind(wx.EVT_BUTTON, self.OnClick30MinView)
+
+        self.bMin5View = GenButton(self.panel, label='5分钟视图', pos=(550, 680), style=wx.BORDER_NONE)
+        self.bMin5View.SetForegroundColour('white')
+        self.bMin5View.SetBackgroundColour('#707070')
+        self.bMin5View.Bind(wx.EVT_BUTTON, self.OnClick5MinView)
 
 
         # ####### 波形图
@@ -138,15 +146,17 @@ class ICPFrame(wx.Frame):
         # self.dataLen = 0  # 数据总长度
         self.latestData = Data(datetime.datetime.now(), 0, 0)
         self.simuI = 0
+        self.dateDelta = datetime.timedelta(minutes=4, seconds=59, microseconds=500)
 
         # 数据
         self.datas = []
-        self.icps = [0] * self.MIN5VIEWLEN
+        self.icps = [0] * MAXDATALEN
         # self.dates = [numpy.array(range(0, 1000))]
-        st_time = datetime.datetime(2021, 1, 1, 0, 0, 0)
-        ed_time = datetime.datetime(2021, 1, 1, 0, 4, 59, 500)
-        delta = datetime.timedelta(seconds=1)
-        self.dates = mdates.drange(st_time, ed_time, delta)
+        # st_time = datetime.datetime(2021, 1, 1, 0, 0, 0)
+        # ed_time = datetime.datetime(2021, 1, 1, 0, 4, 59, 500)
+        # delta = datetime.timedelta(seconds=1)
+        # self.dates = mdates.drange(st_time, ed_time, delta)
+        self.dates = None
         # self.dates = mdates.num2date(self.dates)
         # self.dataLen = len(self.icps)
         # 坐标轴
@@ -159,7 +169,8 @@ class ICPFrame(wx.Frame):
         self.ax.grid(True, c='gray')
         self.ax.tick_params(axis='x', colors='white')
         self.ax.tick_params(axis='y', colors='white')
-        self.line, = self.ax.plot_date(self.dates, [None]*self.MIN5VIEWLEN, '-g')
+        # self.line, = self.ax.plot_date(self.dates, [None]*self.MIN5VIEWLEN, '-g')
+        self.line, = self.ax.plot_date([], [], '-g')
         # self.ax.set_yticks([0, 5, 10, 15, 20, 25, 30], minor=True)
         self.ax.set_yticks([0, 10, 20, 30])
         self.ax.set_ylim(0, 30)
@@ -171,18 +182,15 @@ class ICPFrame(wx.Frame):
         self.ax.xaxis.set_major_formatter(formatter)
         # minticks 需要指出，值的大小决定了图是否能按 10min 为单位显示
         # 值越小可能只能按小时间隔显示
-        # locator = AutoDateLocator(minticks=20)
+        locator = AutoDateLocator(minticks=3)
         # pandas 只生成了满足 10min 的 x 的值，而指定坐标轴以多少的时间间隔画的是下面的这行代码
         # 如果是小时，需要在上面导入相应的东东 YEARLY, MONTHLY, DAILY, HOURLY, MINUTELY, SECONDLY, MICROSECONDLY
         # 并按照下面的格式照葫芦画瓢
-        # locator.intervald[mdates.SECONDLY] = [1]  # 10min 为间隔
-        # self.ax.xaxis.set_major_locator(locator=locator)
+        locator.intervald[mdates.MINUTELY] = [1]  # 10min 为间隔
+        self.ax.xaxis.set_major_locator(locator=locator)
         # self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
-        # self.ax.xaxis.set_major_locator(mdates.MinuteLocator())
         # my_y_ticks = numpy.arange(0, 30, 5)
         # plt.yticks(my_y_ticks)
-        # self.figure.autofmt_xdate()
-        # self.ax.set_xlim([MAXDATALEN-self.MIN5VIEWLEN, MAXDATALEN-1])
 
 
     # 自定义时间刻度如何显示
@@ -252,8 +260,8 @@ class ICPFrame(wx.Frame):
         self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
         self.tICP.SetLabel(str(self.latestData.icp))
         self.tTemp.SetLabel("%.1f"%(self.latestData.ict))
-        self.ax.set_xlim([self.dates[0], self.dates[-1]])
-        return self.line, self.p,
+        self.ax.set_xlim([mdates.date2num(self.latestData.date-self.dateDelta), self.dates[-1]])
+        return self.line, self.p, self.ax.xaxis,
 
     # 开始实时显示
     def steamingDisp(self):
@@ -282,12 +290,23 @@ class ICPFrame(wx.Frame):
         self.latestData = self.datas[0]
         self.simuI += 1
         self.timer_simu.Start(1000)
-        delta = datetime.timedelta(minutes=4, seconds=59, microseconds=500)
+        delta = datetime.timedelta(days=1)
         ed_time = self.latestData.date
         st_time = ed_time - delta
         self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
         self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
 
+    def OnClickDayView(self, evt):
+        self.dateDelta = datetime.timedelta(days=1)
+
+    def OnClickHourView(self, evt):
+        self.dateDelta = datetime.timedelta(hours=3)
+
+    def OnClick30MinView(self, evt):
+        self.dateDelta = datetime.timedelta(minutes=30)
+
+    def OnClick5MinView(self, evt):
+        self.dateDelta = datetime.timedelta(minutes=4, seconds=59, microseconds=500)
 
 class ICPApp(wx.App):
     def OnInit(self):
