@@ -3,11 +3,11 @@
 import wx
 import hashlib
 from uiframe.MainFrame import MainApp
-import uiframe.LoginFrame as LoginFrame
+import uiframe.DocLoginFrame as LoginFrame
 from database.dbUtil import DBHelper
 
 
-class RegisFrame(wx.Frame):
+class DocRegisFrame(wx.Frame):
     def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
@@ -31,8 +31,8 @@ class RegisFrame(wx.Frame):
         self.lTel = wx.StaticText(self, label="电  话", pos=(80, 210))
         self.tTel = wx.TextCtrl(self, size=(235, 25), pos=(150, 210), style=wx.TE_LEFT)
 
-        self.bReg = wx.Button(self, label="注册", pos=(140, 270))
-        self.bCancel = wx.Button(self, label="取消", pos=(280, 270))
+        self.bReg = wx.Button(self, label="注  册", pos=(140, 270))
+        self.bCancel = wx.Button(self, label="取  消", pos=(280, 270))
         self.bCancel.Bind(wx.EVT_BUTTON, self.OnClickCancel)
         self.bReg.Bind(wx.EVT_BUTTON, self.OnClickReg)
 
@@ -65,15 +65,15 @@ class RegisFrame(wx.Frame):
             wx.MessageBox("注册失败，请重试。")
 
 
-class RegisApp(wx.App):
+class DocRegisApp(wx.App):
     def OnInit(self):
-        self.frame = RegisFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 350))
+        self.frame = DocRegisFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 350))
         self.frame.Show()
         return True
 
 
 def main():
-    app = RegisApp()
+    app = DocRegisApp()
     app.MainLoop()
 
 

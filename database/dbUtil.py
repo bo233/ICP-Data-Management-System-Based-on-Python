@@ -64,9 +64,19 @@ class MySQLHelper:
         except Exception as e:
             print("None", e)
 
-    def loginCheck(self, id, pwd):
+    def docLoginCheck(self, id, pwd):
         # self.init()
         sql = "SELECT d_pwd from doctor_tbl where d_id = %s"
+        params = [id]
+        flag = False
+        res = self.fetchone(sql, params)
+        if res is not None and res[0] == pwd:
+            flag = True
+        return flag
+
+    def ptLoginCheck(self, id, pwd):
+        # self.init()
+        sql = "SELECT p_pwd from patient_tbl where p_id = %s"
         params = [id]
         flag = False
         res = self.fetchone(sql, params)
@@ -91,6 +101,19 @@ class MySQLHelper:
         row = self.exec(sql, params)
         # return row is not None
         return True
+
+    def ptRegister(self, name, age, gender, pwd, allergy, family_history,
+                   height, weight, blood_type, tel, medical_history):
+        # self.init()
+        sql = 'INSERT INTO patient_tbl (p_name, p_age, p_gender, p_pwd, allergy, family_history, ' \
+              'height, weight, blood_type, p_tel, past_medical_history) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+        params = [name, age, gender, pwd, allergy, family_history,
+                   height, weight, blood_type, tel, medical_history]
+        row = self.exec(sql, params)
+        sql = 'select max(p_id) from patient_tbl'
+        res = self.fetchone(sql, [])
+        # return row is not None
+        return res
 
     def getPtData(self, id:str):
         # get info

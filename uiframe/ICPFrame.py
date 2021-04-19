@@ -138,11 +138,11 @@ class ICPFrame(wx.Frame):
         # ####### 波形图
         # 变量
         MAXDATALEN = 86400
-        self.DAYVIEWLEN = 86400
-        self.HOUR3VIEWLEN = 10800
-        self.MIN30VIEWLEN = 1800
-        self.MIN5VIEWLEN = 300
-        self.axisxLen = self.MIN5VIEWLEN  # x轴长度
+        # self.DAYVIEWLEN = 86400
+        # self.HOUR3VIEWLEN = 10800
+        # self.MIN30VIEWLEN = 1800
+        # self.MIN5VIEWLEN = 300
+        # self.axisxLen = self.MIN5VIEWLEN  # x轴长度
         # self.dataLen = 0  # 数据总长度
         self.latestData = Data(datetime.datetime.now(), 0, 0)
         self.simuI = 0

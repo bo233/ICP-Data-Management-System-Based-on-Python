@@ -10,6 +10,7 @@ import datetime
 from util.dataproc import *
 from util.DS import *
 from database.dbUtil import DBHelper
+from uiframe import ICPFrame
 
 
 class MainFrame(wx.Frame):
@@ -105,6 +106,7 @@ class MainFrame(wx.Frame):
         self.bSclSub.Bind(wx.EVT_BUTTON, self.OnClickSub)
 
         self.bCon = wx.Button(self.panel, label='连接设备', pos=(200, 700))
+        self.bCon.Bind(wx.EVT_BUTTON, self.OnClickCon)
 
     # 刷新波形图
     def refresh(self):
@@ -169,6 +171,10 @@ class MainFrame(wx.Frame):
             self.sclPos = 1000 - self.sclSize
         self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
         self.refresh()
+
+    def OnClickCon(self, evt):
+        self.Close(True)
+        ICPFrame.main()
 
 
 class MainApp(wx.App):

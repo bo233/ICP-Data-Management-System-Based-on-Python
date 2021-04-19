@@ -1,9 +1,9 @@
 # coding=utf-8
 
-from uiframe.LoginFrame import LoginApp
+from uiframe.IndexFrame import IndexFrameApp
 from database.dbUtil import DBHelper
 
 
 # DBHelper.init()
-app = LoginApp()
+app = IndexFrameApp()
 app.MainLoop()
