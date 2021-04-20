@@ -64,7 +64,7 @@ class PntRegisFrame(wx.Frame):
         name = self.tName.GetValue()
         pwd = self.tPwd.GetValue()
         pwd2 = self.tPwd2.GetValue()
-        tel = self.tHeight.GetValue()
+        tel = self.tTel.GetValue()
         md5 = hashlib.md5()
         md5.update(pwd.encode('utf-8'))
         encode = str(md5.hexdigest())
@@ -90,7 +90,6 @@ class PntRegisFrame(wx.Frame):
         elif pwd != pwd2:
             wx.MessageBox("两次密码不一致！")
         else:
-
             id = DBHelper.ptRegister(name, age, gen, encode, allergy, family_his,
                                height, weight, bld_type, tel, medi_his)
             if id is not None:

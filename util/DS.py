@@ -56,7 +56,10 @@ class Cons:
 
 
 class PtData:
-    def __init__(self, id:int, name:str, age:int, gender:str, consultations=None, icpPath=None):
+    # name, age, gender, pwd, allergy, family_history,
+    #                    height, weight, blood_type, tel, medical_history
+    def __init__(self, id:int, name:str, age:int, gender:str, height:float, weight:float, blood_type:str, tel:str,
+                 medical_history='', allergy='', family_history='', consultations=None, icpPath=None):
         if icpPath is None:
             icpPath = []
         if consultations is None:
@@ -67,4 +70,11 @@ class PtData:
         self.gender = gender
         self.cons:list[Cons] = consultations
         self.icpPath:list[str] = icpPath
+        self.allergy = allergy
+        self.family_history = family_history
+        self.height = height
+        self.weight = weight
+        self.blood_type = blood_type
+        self.tel = tel
+        self.medical_history = medical_history
 

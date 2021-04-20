@@ -122,7 +122,20 @@ class MySQLHelper:
         tInfo = self.fetchone(sql, params)
         if tInfo is None: return None
         info = list(tInfo)
-        ptData = PtData(int(id), str(info[1]), int(info[2]), str(info[3]))
+
+        name = info[1]
+        age = int(info[2])
+        gender = info[3]
+        allergy = info[5]
+        family_his = info[6]
+        height = float(info[7])
+        weight = float(info[8])
+        bld_type = info[9]
+        tel = info[10]
+        medi_his = info[11]
+
+        ptData = PtData(int(id), name, age, gender, height, weight, bld_type, tel,
+                 medi_his, allergy, family_his)
 
         # get consultations
         sql = 'SELECT * from consultation_tbl where p_id = %s'
