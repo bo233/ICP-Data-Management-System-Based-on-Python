@@ -105,6 +105,9 @@ class MySQLHelper:
     def ptRegister(self, name, age, gender, pwd, allergy, family_history,
                    height, weight, blood_type, tel, medical_history):
         # self.init()
+        if allergy == '': allergy = '无'
+        if family_history == '': family_history = '无'
+        if medical_history == '': medical_history = '无'
         sql = 'INSERT INTO patient_tbl (p_name, p_age, p_gender, p_pwd, allergy, family_history, ' \
               'height, weight, blood_type, p_tel, past_medical_history) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
         params = [name, age, gender, pwd, allergy, family_history,
@@ -152,5 +155,16 @@ class MySQLHelper:
         params = [id, str(consultations.date), consultations.sx, consultations.diag]
         self.exec(sql, params)
 
+    def modifyPtInfo(self, id, name, age, gender, allergy, family_history,
+                   height, weight, blood_type, tel, medical_history):
+        if allergy == '': allergy = '无'
+        if family_history == '': family_history = '无'
+        if medical_history == '': medical_history = '无'
+        sql = 'UPDATE patient_tbl SET p_name=%s, p_age=%s, p_gender=%s, allergy=%s, family_history=%s, ' \
+              'height=%s, weight=%s, blood_type=%s, p_tel=%s, past_medical_history=%s WHERE p_id=%s'
+        params = [name, age, gender, allergy, family_history,
+                   height, weight, blood_type, tel, medical_history, id]
+        row = self.exec(sql, params)
+        return True
 
 DBHelper = MySQLHelper()

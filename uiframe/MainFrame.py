@@ -11,6 +11,7 @@ from util.dataproc import *
 from util.DS import *
 from database.dbUtil import DBHelper
 from uiframe import ICPFrame
+from uiframe import PntModifyFrame as PntModFrame
 
 
 class MainFrame(wx.Frame):
@@ -67,19 +68,12 @@ class MainFrame(wx.Frame):
         self.tDiag = wx.TextCtrl(self.panel, size=(240, 100), pos=(940, 530), style=wx.TE_MULTILINE)
         self.lDate = wx.StaticText(self.panel, label='日期：', pos=(900, 680))
         self.tDate = wx.StaticText(self.panel, label=str(datetime.date.today()), pos=(940, 680))
-        self.bSave = wx.Button(self.panel, label='保  存', pos=(920, 740))
-        self.bClear = wx.Button(self.panel, label='清  除', pos=(1040, 740))
+        self.bSave = wx.Button(self.panel, label='保  存', pos=(940, 740))
+        self.bClear = wx.Button(self.panel, label='清  除', pos=(1060, 740))
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
         self.bClear.Bind(wx.EVT_BUTTON, self.OnClickClear)
         self.bSave.Bind(wx.EVT_BUTTON, self.OnClickSave)
-
-        # hbox1.Add(tId, proportion=1)
-        # pntInfoBox.Add(hbox1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=5)
-
-        # pntInfoBox.Add((1000, 50))
-
-        # panel.SetSizer(pntInfoBox)
 
         # 波形图
         data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
@@ -88,15 +82,7 @@ class MainFrame(wx.Frame):
             scores.append(i.icp)
         self.t_score = numpy.arange(1, len(scores) + 1, 1)
         self.s_score = numpy.array(scores)
-
         self.dataLen = len(scores)
-
-        # self.figure = Figure()
-        # self.figure, self.axes = plt.subplots()
-        # self.figure.set_figheight(6)
-        # self.figure.set_figwidth(9)
-        # self.axes = self.figure.axes()
-        # self.axes = self.figure.add_subplot(111)
         self.axes = self.panel.figure.add_subplot(111)
         self.panel.figure.subplots_adjust(left=0.1, bottom=0.4, right=0.7, top=0.9 )
         self.axes.plot(self.t_score, self.s_score, 'k')
@@ -120,6 +106,9 @@ class MainFrame(wx.Frame):
 
         self.bCon = wx.Button(self.panel, label='连接设备', pos=(200, 700))
         self.bCon.Bind(wx.EVT_BUTTON, self.OnClickCon)
+
+        self.bModify = wx.Button(self.panel, label='修改信息', pos=(300, 700))
+        self.bModify.Bind(wx.EVT_BUTTON, self.OnClickModify)
 
     # 刷新波形图
     def refresh(self):
@@ -195,6 +184,11 @@ class MainFrame(wx.Frame):
         self.Close(True)
         ICPFrame.main()
 
+    def OnClickModify(self, evt):
+        # PntModifyFrame.main(self, id)
+        frame = PntModFrame.PntModifyFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450),
+                                           p_id=self.tId.GetValue())
+        frame.Show()
 
 class MainApp(wx.App):
     def OnInit(self):
