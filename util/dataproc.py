@@ -70,15 +70,19 @@ class DataHelper:
             nn, no, icp, ict = unpack("BIBH", data)
             d = pack("BI", nn, no)
             self.com.send(COM.SND_DataCnf, d)
-            rtn = Data(DatatimeFormat(), icp / 10, ict - 50)
+            rtn = Data(datetime.datetime.now(), icp / 10, ict - 50)
             state = const.DATA
             self.rtnQue.put((state, rtn))
 
         # 报警上报
         # AB CD 42 0F NN(1) No(1) Evt(1) OnOff(1) Time(8) SS SS EE FF
         # 发送数据：设备号(NN), 报警序号(No), 报警类型(Alarm), 出现/消失(OnOff), 绝对时间(Time)
+        # AB CD 82 05 NN(1) No(4) SS SS EE FF
+        # 数据内容：设备号(NN), 序号(No)
         elif cmd == COM.REC_AlmSnd:
-            pass
+            nn, no, evt, onoff, time = unpack('BBBBQ')
+            d = pack('BB', nn, no)
+            self.com.send(COM.SND_AlmCnf, d)
 
         # 电量上报
         # AB CD 43 02 NN(1) Bat(1) SS SS EE FF
@@ -92,15 +96,32 @@ class DataHelper:
             self.rtnQue.put((state, bat))
 
         # 清零上报
+        # AB CD 44 18 NN(1) No(1) MODE(1) ID(5) AI(4) DI(4) TIME(8) SS SS EE FF
+        #  数据内容：设备号(NN), 清零序号(No), 清零方式(MODE), 探头ID(ID), 报警序号(AI), 数据序号(DI), 绝对时间(TIME)
+        # AB CD 84 01 NN(1) SS SS EE FF
+        # 数据内容：设备号(NN)
         elif cmd == COM.REC_ZeroSnd:
-            pass
+            nn, no, mode, id, id_, ai, di, time = unpack('BBBIBLLQ', data)
+            d = pack('B', nn)
+            self.com.send(d)
+
         # 可以同步数据
+        # AB CD 46 11 NN(1) AI(4) DI(4) ZI(1) TIME(8) SS SS EE FF
+        # 数据内容：设备号(NN), 报警序号(AI), 数据序号(DI), 清零序号(ZI), 绝对时间(TIME)
         elif cmd == COM.REC_Sync:
             pass
+
         # Ping回复
+        # AB CD 47 01 NN(1) SS SS EE FF
+        # 数据内容：设备号(NN)
         elif cmd == COM.REC_PingRsq:
             pass
+
         # 时间同步
+        # AB CD 48 01 NN(1) SS SS EE FF
+        # 数据内容：设备号(NN)
+        # AB CD 88 08 NN(1) Y(2) MON(1) D(1) H(1) MIN(1) SEC(1) SS SS EE FF
+        # 数据内容：年(Y) 月(MON) 日(D) 时(H) 分(MIN) 秒(SEC)
         elif cmd == COM.REC_TimeReq:
             now = DatatimeFormat()
             NN = data
@@ -120,30 +141,58 @@ class DataHelper:
             self.rtnQue.put((state, int.from_bytes(nn, signed=False)))
 
         # 历史报警上报
+        # AB CD 50 0F NN(1) No(1) Evt(1) OnOff(1) Time(8) SS SS EE FF
+        # 数据内容：设备号(NN), 报警序号(No), 报警类型(Alarm), 出现/消失(OnOff), 绝对时间(Time)
+        # AB CD 90 09 NN(1) No(4) No(4) SS SS EE FF
+        # 数据内容：设备号(NN), 起始序号(No), 结束序号(No)
         elif cmd == COM.REC_HESnd:
             pass
+
         # 报警上报完成
+        # AB CD 53 0A NN(1) No(4) No(4) 4F 4B SS SS EE FF
+        # 数据内容：设备号(NN), 起始序号(No), 结束序号(No), 完成标志("OK")
         elif cmd == COM.REC_HEok:
             pass
+
         # 报警完成回复
+        # AB CD 55 05 NN(1) 44 4F 4E 45 SS SS EE FF
+        # 数据内容：设备号(NN), 完成标志("DONE")
         elif cmd == COM.REC_HERsp:
             pass
+
         # 历史数据上报
+        # AB CD 53 ??(3n+6) NN(1) No(4) Inc(1) Data(3n) SS SS EE FF
+        # 数据内容：设备号(1), 序号(4), 增量(1), 数据集(Data)
         elif cmd == COM.REC_HDSnd:
             pass
+
         # 数据上报完成
+        # AB CD 53 0A NN(1) No(4) No(4) 4F 4B SS SS EE FF
+        # 数据内容：设备号(NN), 起始序号(No), 结束序号(No), 完成标志("OK")
         elif cmd == COM.REC_HDok:
             pass
+
         # 数据完成回复
+        #  AB CD 55 05 NN(1) 44 4F 4E 45 SS SS EE FF
+        # 数据内容：设备号(NN), 完成标志("DONE")
         elif cmd == COM.REC_HDRsp:
             pass
+
         # 历史清零上报
+        # AB CD 56 18 NN(1) No(1) MODE(1) ID(5) AI(4) DI(4) TIME(8) SS SS EE FF
+        #  数据内容：设备号(NN), 清零序号(No), 清零方式(MODE), 探头ID(ID), 报警序号(AI), 数据序号(DI), 绝对时间(TIME)
         elif cmd == COM.REC_HZSnd:
             pass
+
         # 历史清零上报完成
+        # AB CD 57 0B NN(1) No(4) No(4) 4F 4B SS SS EE FF
+        # 数据内容：设备号(NN), 起始序号(No), 结束序号(No), 完成标志("OK")
         elif cmd == COM.REC_HZok:
             pass
+
         # 历史清零完成回复
+        # AB CD 58 05 NN(1) 44 4F 4E 45 SS SS EE FF
+        # 数据内容：设备号(NN), 完成标志("DONE")
         elif cmd == COM.REC_HZRsp:
             pass
 

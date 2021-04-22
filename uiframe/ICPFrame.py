@@ -2,6 +2,7 @@
 
 import wx
 import numpy
+import gc
 import time
 import datetime
 import pandas as pd
@@ -17,6 +18,8 @@ from util.DS import *
 from database.dbUtil import DBHelper
 from wx.lib.buttons import GenButton
 from util.dataproc import *
+# import matplotlib
+# matplotlib.use('WxAgg')
 
 
 class ICPFrame(wx.Frame):
@@ -78,6 +81,10 @@ class ICPFrame(wx.Frame):
         self.tTime.SetFont(normalFont)
         self.tTime.SetForegroundColour(white)
 
+        self.tBattery = wx.StaticText(self.panel, label='剩余电量：--%', pos=(1000, 830))
+        self.tBattery.SetFont(normalFont)
+        self.tBattery.SetForegroundColour(white)
+
 
         # 计时器
         self.timer_sec = wx.Timer(owner=self)
@@ -113,6 +120,13 @@ class ICPFrame(wx.Frame):
         self.bSimuCon.SetForegroundColour('white')
         self.bSimuCon.SetBackgroundColour('#707070')
         self.bSimuCon.Bind(wx.EVT_BUTTON, self.OnClickSimuCon)
+
+        self.bSimuDiscon = GenButton(self.panel, label='断开模拟连接', pos=(700, y), style=wx.BORDER_NONE)
+        self.bSimuDiscon.SetForegroundColour('white')
+        self.bSimuDiscon.SetBackgroundColour('#707070')
+        self.bSimuDiscon.Bind(wx.EVT_BUTTON, self.OnClickSimuDiscon)
+        self.bSimuDiscon.Disable()
+        self.bSimuDiscon.Hide()
 
         self.bDayView = GenButton(self.panel, label='天视图', pos=(100, 680), style=wx.BORDER_NONE)
         self.bDayView.SetForegroundColour('white')
@@ -225,6 +239,12 @@ class ICPFrame(wx.Frame):
             state, rtn = self.dHelper.getRtn()
             if state == const.DATA:
                 self.latestData = rtn
+            if state == const.BATTERY:
+                self.tBattery.SetLabel('剩余电量：%d%%'%(rtn*25))
+            if state == const.OFF:
+                self.timer_hnd.Stop()
+                self.ani.event_source.stop()
+
 
     def simuHandle(self, evt):
         if self.simuI > 9000:
@@ -255,17 +275,18 @@ class ICPFrame(wx.Frame):
         self.icps[-1] = self.latestData.icp
         self.dates[:] = numpy.roll(self.dates, -1)
         self.dates[-1] = mdates.date2num(self.latestData.date)
-        print(str(self.latestData.date), self.dates[-1], self.icps[-1])
+        # print(str(self.latestData.date), self.dates[-1], self.icps[-1])
         self.line.set_data(self.dates, self.icps)
         self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
         self.tICP.SetLabel(str(self.latestData.icp))
         self.tTemp.SetLabel("%.1f"%(self.latestData.ict))
         self.ax.set_xlim([mdates.date2num(self.latestData.date-self.dateDelta), self.dates[-1]])
+        gc.collect()
         return self.line, self.p, self.ax.xaxis,
 
     # 开始实时显示
     def steamingDisp(self):
-        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
+        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True, save_count=10)
 
     def OnClickConDev(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
@@ -275,8 +296,13 @@ class ICPFrame(wx.Frame):
             self.dHelper = DataHelper(path)
             # TODO: check if connect successfully
             if True:
-                self.steamingDisp()
+                self.latestData.date = datetime.datetime.now()
                 self.timer_hnd.Start(100)
+                delta = datetime.timedelta(days=1)
+                ed_time = self.latestData.date
+                st_time = ed_time - delta
+                self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
+                self.steamingDisp()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')
@@ -294,7 +320,19 @@ class ICPFrame(wx.Frame):
         ed_time = self.latestData.date
         st_time = ed_time - delta
         self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
-        self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True)
+        self.steamingDisp()
+        self.bSimuCon.Disable()
+        self.bSimuCon.Hide()
+        self.bSimuDiscon.Enable()
+        self.bSimuDiscon.Show()
+
+    def OnClickSimuDiscon(self, evt):
+        self.timer_simu.Stop()
+        self.ani.event_source.stop()
+        self.bSimuDiscon.Disable()
+        self.bSimuDiscon.Hide()
+        self.bSimuCon.Enable()
+        self.bSimuCon.Show()
 
     def OnClickDayView(self, evt):
         self.dateDelta = datetime.timedelta(days=1)
