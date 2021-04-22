@@ -2,7 +2,6 @@ from util.DS import *
 from util.COM import COMHelper
 from util.COM import COMConst as COM
 from struct import *
-from threading import Thread
 import queue
 
 
@@ -37,15 +36,14 @@ def read(path):
 
 
 class DataHelper:
-    def __int__(self, com, bps=921600, timeout=5):
+    def __init__(self, com='/dev/cu.usbserial-14310', bps=115200, timeout=5):
         self.com = COMHelper(com, bps, timeout)
         self.rtnQue = queue.Queue()
         self.devNo = 0
+        self.rtn = None
 
     def handle(self):
         cmd, data = self.com.receive()
-        state = const.INVALID
-        rtn = None
 
         if data is None:
             pass
@@ -58,6 +56,7 @@ class DataHelper:
         elif cmd == COM.REC_RegReq:
             ID = data
             d = pack("B", self.devNo) + ID
+            # print('data:',d)
             self.devNo += 1
             self.com.send(COM.SND_RegRsp, d)
 
@@ -67,10 +66,15 @@ class DataHelper:
         # AB CD 81 05 NN(1) No(4) SS SS EE FF
         # 发送数据：设备号(NN), 序号(No)
         elif cmd == COM.REC_DataSnd:
-            nn, no, icp, ict = unpack("BIBH", data)
+            # print('len:', len(data))
+            # nn, no, icp, ict = unpack("BIBH", data)
+            nn = data[0]
+            no = int.from_bytes(data[1:5], byteorder="little", signed=False)
+            icp = data[5]
+            ict = int.from_bytes(data[6:8], byteorder="little", signed=False)
             d = pack("BI", nn, no)
             self.com.send(COM.SND_DataCnf, d)
-            rtn = Data(datetime.datetime.now(), icp / 10, ict - 50)
+            rtn = Data(datetime.datetime.now(), icp - 50, ict / 10)
             state = const.DATA
             self.rtnQue.put((state, rtn))
 
@@ -200,9 +204,12 @@ class DataHelper:
 
     def getRtn(self):
         if self.rtnQue.empty():
-            return None
+            return const.INVALID, None
         else:
             return self.rtnQue.get()
+
+    def _getRtn(self):
+        return self.rtn
 
 
 class const:
@@ -213,5 +220,12 @@ class const:
     OFF = 3
 
 if __name__ == "__main__":
-    data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
-    print(data[0].toString())
+    # data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
+    # print(data[0].toString())
+    dHelper = DataHelper()
+    # cmd, data = dHelper.com.receive()
+    # print(cmd, data)
+    while True:
+        dHelper.handle()
+        state, rtn = dHelper.getRtn()
+        print("state: ",state, " return: ",rtn)

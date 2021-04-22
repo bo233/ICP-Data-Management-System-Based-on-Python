@@ -13,11 +13,12 @@ import matplotlib.dates as mdates
 import matplotlib.animation as animation
 from matplotlib.dates import AutoDateLocator
 import datetime
-from util.dataproc import *
 from util.DS import *
 from database.dbUtil import DBHelper
 from wx.lib.buttons import GenButton
 from util.dataproc import *
+# from  util.Data import *
+# import util.Data
 # import matplotlib
 # matplotlib.use('WxAgg')
 
@@ -236,12 +237,15 @@ class ICPFrame(wx.Frame):
     def handle(self, evt):
         # TODO
         if self.dHelper is not None:
+            self.dHelper.handle()
             state, rtn = self.dHelper.getRtn()
+            print(state, rtn)
             if state == const.DATA:
                 self.latestData = rtn
-            if state == const.BATTERY:
+                # print(rtn)
+            elif state == const.BATTERY:
                 self.tBattery.SetLabel('剩余电量：%d%%'%(rtn*25))
-            if state == const.OFF:
+            elif state == const.OFF:
                 self.timer_hnd.Stop()
                 self.ani.event_source.stop()
 
@@ -289,20 +293,20 @@ class ICPFrame(wx.Frame):
         self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True, save_count=10)
 
     def OnClickConDev(self, evt):
-        dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
+        # dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
 
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetValue()
-            self.dHelper = DataHelper(path)
-            # TODO: check if connect successfully
-            if True:
-                self.latestData.date = datetime.datetime.now()
-                self.timer_hnd.Start(100)
-                delta = datetime.timedelta(days=1)
-                ed_time = self.latestData.date
-                st_time = ed_time - delta
-                self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
-                self.steamingDisp()
+        # if dlg.ShowModal() == wx.ID_OK:
+            # path = dlg.GetValue()
+            # print(path)
+        self.dHelper = DataHelper()
+        if self.dHelper is not None:
+            self.latestData.date = datetime.datetime.now()
+            self.timer_hnd.Start(1000)
+            delta = datetime.timedelta(days=1)
+            ed_time = self.latestData.date
+            st_time = ed_time - delta
+            self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
+            self.steamingDisp()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')

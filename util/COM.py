@@ -128,38 +128,48 @@ class COMHelper:
             try:
                 # 接收
                 if self.ser.in_waiting:
+                    print('---------', flag)
                     # 判断包头
                     if flag == 0:
                         readbuf = self.read()
                         read = int(readbuf.hex(), 16)
+                        print(read)
                         if read == 0xab:
                             flag1 = 1
-                        if flag1 == 1:
+                        elif flag1 == 1:
                             if read == 0xcd:
                                 flag += 1
                             flag1 = 0
+                    # 命令字
                     elif flag == 1:
                         readbuf = self.read()
                         cmd = int(readbuf.hex(), 16)
                         checkSum += cmd
                         cmd |= 0x40
                         flag += 1
+                    # 数据长度
                     elif flag == 2:
                         readbuf = self.read()
                         dataSize = int(readbuf.hex(), 16)
+                        print(dataSize)
                         checkSum += dataSize
                         flag += 1
+                    # 数据内容
                     elif flag == 3:
                         readbuf = self.read(dataSize)
+                        print(readbuf)
                         data = readbuf
                         checkSum += int(readbuf.hex(), 16) & 0xffff
                         flag += 1
+                    # 校验和
                     elif flag == 4:
                         readbuf = self.read(2)
                         cs = int(readbuf.hex(), 16)
                         if cs != 0xffff & checkSum:
-                            data = None
+                            # data = None
+                            pass
                         flag += 1
+                    # 包尾
                     elif flag == 5:
                         self.read(2)
                         break
@@ -181,15 +191,38 @@ class COMHelper:
         return cmd, data
 
     def send(self, cmd, data):
-        size = calcsize(data)
+        snd = b'\xab\xcd'
+        size = len(data)
         checkSum = 0
-        self.write(chr(0xab).encode("utf-8"))
-        self.write(chr(0xcd).encode("utf-8"))
-        self.write(chr(cmd).encode("utf-8"))
+        # self.write(chr(0xab).encode("utf-8"))
+        # self.write(chr(0xcd).encode("utf-8"))
+        # self.write(b'\xab\xcd')
+        # self.write(chr(cmd).encode("utf-8"))
+        snd += pack('B', cmd)
         checkSum += cmd
         checkSum += size
-        self.write(chr(size).encode("utf-8"))
-        self.write(data)
-        self.write(pack("=H", size))
-        self.write(chr(0xee).encode("utf-8"))
-        self.write(chr(0xff).encode("utf-8"))
+        # self.write(chr(size).encode("utf-8"))
+        snd += pack('B', size)
+        # self.write(data)
+        snd += data
+        checkSum += int.from_bytes(data, byteorder='little') & 0xffff
+        checkSum = checkSum & 0xffff
+        # self.write(pack("=H", checkSum))
+        snd += pack("=H", checkSum)
+        # self.write(chr(0xee).encode("utf-8"))
+        # self.write(chr(0xff).encode("utf-8"))
+        # self.write(b'\xee\xff')
+        snd += b'\xee\xff'
+        print(cmd, data)
+        print('send:', snd)
+        self.write(snd)
+
+if __name__ == '__main__':
+    cHelper = COMHelper('/dev/cu.usbserial-14310', 115200, 5)
+    # cHelper.printDevInfo()
+    # print(cHelper.read(1))
+    # print(cHelper.read(1))
+    # print(cHelper.read(1))
+    # print(cHelper.read(1))
+    # print(cHelper.readline())
+    cHelper.receive()
