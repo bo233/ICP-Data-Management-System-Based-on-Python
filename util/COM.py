@@ -1,4 +1,5 @@
 import serial
+import serial.tools.list_ports
 from struct import *
 
 
@@ -88,6 +89,14 @@ class COMHelper:
         port_list = list(serial.tools.list_ports.comports())
         print(port_list)
 
+    @staticmethod
+    def getPorts():
+        port_list = list(serial.tools.list_ports.comports())
+        path_list = []
+        for i in port_list:
+            path_list.append(i.device)
+        return path_list
+
     # 接收指定大小的数据
     # 从串口读size个字节。如果指定超时，则可能在超时后返回较少的字节；如果没有指定超时，则会一直等到收完指定的字节数。
     def read(self, size=1):
@@ -128,12 +137,12 @@ class COMHelper:
             try:
                 # 接收
                 if self.ser.in_waiting:
-                    print('---------', flag)
+                    # print('---------', flag)
                     # 判断包头
                     if flag == 0:
                         readbuf = self.read()
                         read = int(readbuf.hex(), 16)
-                        print(read)
+                        # print(read)
                         if read == 0xab:
                             flag1 = 1
                         elif flag1 == 1:
@@ -157,7 +166,7 @@ class COMHelper:
                     # 数据内容
                     elif flag == 3:
                         readbuf = self.read(dataSize)
-                        print(readbuf)
+                        print('receive:',readbuf)
                         data = readbuf
                         checkSum += int(readbuf.hex(), 16) & 0xffff
                         flag += 1

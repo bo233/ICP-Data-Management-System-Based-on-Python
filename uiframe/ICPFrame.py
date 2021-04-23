@@ -293,20 +293,21 @@ class ICPFrame(wx.Frame):
         self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True, save_count=10)
 
     def OnClickConDev(self, evt):
-        # dlg = wx.TextEntryDialog(self.panel, '输入设备地址：', '连接设备')
+        choices = COMHelper.getPorts()
+        dlg = wx.SingleChoiceDialog(self.panel, '选择设备：', '连接设备', choices)
 
-        # if dlg.ShowModal() == wx.ID_OK:
-            # path = dlg.GetValue()
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetStringSelection()
             # print(path)
-        self.dHelper = DataHelper()
-        if self.dHelper is not None:
-            self.latestData.date = datetime.datetime.now()
-            self.timer_hnd.Start(1000)
-            delta = datetime.timedelta(days=1)
-            ed_time = self.latestData.date
-            st_time = ed_time - delta
-            self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
-            self.steamingDisp()
+            self.dHelper = DataHelper(path)
+            if self.dHelper is not None:
+                self.latestData.date = datetime.datetime.now()
+                self.timer_hnd.Start(1000)
+                delta = datetime.timedelta(days=1)
+                ed_time = self.latestData.date
+                st_time = ed_time - delta
+                self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
+                self.steamingDisp()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')

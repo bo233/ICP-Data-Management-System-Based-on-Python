@@ -40,7 +40,6 @@ class DataHelper:
         self.com = COMHelper(com, bps, timeout)
         self.rtnQue = queue.Queue()
         self.devNo = 0
-        self.rtn = None
 
     def handle(self):
         cmd, data = self.com.receive()
@@ -207,9 +206,6 @@ class DataHelper:
             return const.INVALID, None
         else:
             return self.rtnQue.get()
-
-    def _getRtn(self):
-        return self.rtn
 
 
 class const:
