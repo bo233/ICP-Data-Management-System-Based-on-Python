@@ -94,9 +94,9 @@ class DataHelper:
         # 数据内容：设备号(NN)
         elif cmd == COM.REC_BatSnd:
             nn, b = unpack("BB", data)
-            bat = int.from_bytes(b, signed=False)
+            # bat = int.from_bytes(b, signed=False, byteorder='little')
             state = const.BATTERY
-            self.rtnQue.put((state, bat))
+            self.rtnQue.put((state, b))
 
         # 清零上报
         # AB CD 44 18 NN(1) No(1) MODE(1) ID(5) AI(4) DI(4) TIME(8) SS SS EE FF
@@ -106,7 +106,7 @@ class DataHelper:
         elif cmd == COM.REC_ZeroSnd:
             nn, no, mode, id, id_, ai, di, time = unpack('BBBIBLLQ', data)
             d = pack('B', nn)
-            self.com.send(d)
+            self.com.send(COM.SND_ZeroReq, d)
 
         # 可以同步数据
         # AB CD 46 11 NN(1) AI(4) DI(4) ZI(1) TIME(8) SS SS EE FF
@@ -139,9 +139,9 @@ class DataHelper:
         elif cmd == COM.REC_OffSnd:
             nn, _, _, _ = unpack("4B", data)
             d = pack("B", nn)
-            self.com.send(d)
+            self.com.send(COM.SND_OffRsp, d)
             state = const.OFF
-            self.rtnQue.put((state, int.from_bytes(nn, signed=False)))
+            self.rtnQue.put((state, nn))
 
         # 历史报警上报
         # AB CD 50 0F NN(1) No(1) Evt(1) OnOff(1) Time(8) SS SS EE FF

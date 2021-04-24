@@ -74,6 +74,12 @@ class MySQLHelper:
             flag = True
         return flag
 
+    def getDocName(self, id):
+        sql = "SELECT d_name from doctor_tbl where d_id = %s"
+        params = [id]
+        name = self.fetchone(sql, params)
+        return name
+
     def ptLoginCheck(self, id, pwd):
         # self.init()
         sql = "SELECT p_pwd from patient_tbl where p_id = %s"
@@ -147,8 +153,22 @@ class MySQLHelper:
         for res in rows:
             cons = Cons(res[2], res[3], res[4])
             ptData.cons.append(cons)
+        ptData.cons.sort(key=lambda x:x.date, reverse=True)
 
         return ptData
+
+    # def getPtData(self, id:str):
+    #     ptData = self.getPtInfo(id)
+    #     if ptData is not None:
+    #         sql = 'SELECT c_date,symptom,diagnosis from consultation_tbl where p_id = %s'
+    #         params = [id]
+    #         cons = self.fetchall(sql, params)
+    #         for i in cons:
+    #             con = Cons(i[0], i[1], i[2])
+    #             ptData.cons.append(con)
+    #         ptData.cons.sort(key=lambda x:x.date, reverse=True)
+    #
+    #     return ptData
 
     def addPtCons(self, id, consultations:Cons):
         sql = 'INSERT into consultation_tbl (p_id,c_date,symptom, diagnosis) values(%s, %s, %s, %s)'

@@ -24,10 +24,10 @@ from util.dataproc import *
 
 
 class ICPFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
-                 style=wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 900),
+                 style=wx.DEFAULT_FRAME_STYLE, p_id=0):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
-
+        self.p_id = p_id
         self.dHelper:DataHelper = None
 
         self.InitUI()
@@ -109,15 +109,16 @@ class ICPFrame(wx.Frame):
         self.bSetAlarm.SetBackgroundColour('#707070')
         self.bSetAlarm.Bind(wx.EVT_BUTTON, self.OnClickSetAlm)
 
-        self.bOpState = GenButton(self.panel, label='手术阶段', pos=(400, y), style=wx.BORDER_NONE)
-        self.bOpState.SetForegroundColour('white')
-        self.bOpState.SetBackgroundColour('#707070')
+        self.bRtnCon = GenButton(self.panel, label='返回就诊', pos=(400, y), style=wx.BORDER_NONE)
+        self.bRtnCon.SetForegroundColour('white')
+        self.bRtnCon.SetBackgroundColour('#707070')
+        self.bRtnCon.Bind(wx.EVT_BUTTON, self.OnClickRtnCon)
 
         self.bDisconDev = GenButton(self.panel, label='断开设备', pos=(550, y), style=wx.BORDER_NONE)
         self.bDisconDev.SetForegroundColour('white')
         self.bDisconDev.SetBackgroundColour('#707070')
 
-        self.bSimuCon = GenButton(self.panel, label='模拟连接', pos=(700, y), style=wx.BORDER_NONE)
+        self.bSimuCon = GenButton(self.panel, label='从SD卡读取', pos=(700, y), style=wx.BORDER_NONE)
         self.bSimuCon.SetForegroundColour('white')
         self.bSimuCon.SetBackgroundColour('#707070')
         self.bSimuCon.Bind(wx.EVT_BUTTON, self.OnClickSimuCon)
@@ -235,7 +236,6 @@ class ICPFrame(wx.Frame):
         self.tTime.SetLabel(time_str)
 
     def handle(self, evt):
-        # TODO
         if self.dHelper is not None:
             self.dHelper.handle()
             state, rtn = self.dHelper.getRtn()
@@ -248,6 +248,7 @@ class ICPFrame(wx.Frame):
             elif state == const.OFF:
                 self.timer_hnd.Stop()
                 self.ani.event_source.stop()
+                wx.MessageBox('颅内压测量仪器已关机！')
 
 
     def simuHandle(self, evt):
@@ -295,10 +296,8 @@ class ICPFrame(wx.Frame):
     def OnClickConDev(self, evt):
         choices = COMHelper.getPorts()
         dlg = wx.SingleChoiceDialog(self.panel, '选择设备：', '连接设备', choices)
-
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetStringSelection()
-            # print(path)
             self.dHelper = DataHelper(path)
             if self.dHelper is not None:
                 self.latestData.date = datetime.datetime.now()
@@ -308,6 +307,7 @@ class ICPFrame(wx.Frame):
                 st_time = ed_time - delta
                 self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
                 self.steamingDisp()
+                self.bSimuCon.Disable()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')
@@ -317,19 +317,23 @@ class ICPFrame(wx.Frame):
         # self.ax.hlines(self.alarmThreshold, 0, 10000, color='#FF9912')
 
     def OnClickSimuCon(self, evt):
-        self.datas = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
-        self.latestData = self.datas[0]
-        self.simuI += 1
-        self.timer_simu.Start(1000)
-        delta = datetime.timedelta(days=1)
-        ed_time = self.latestData.date
-        st_time = ed_time - delta
-        self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
-        self.steamingDisp()
-        self.bSimuCon.Disable()
-        self.bSimuCon.Hide()
-        self.bSimuDiscon.Enable()
-        self.bSimuDiscon.Show()
+        file_wildcard = '数据文件(*.dat)|*.dat'
+        dlg = wx.FileDialog(self.panel, '选择文件',style=wx.FD_OPEN, wildcard=file_wildcard)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.datas = read(dlg.GetPath())
+            self.latestData = self.datas[0]
+            self.simuI += 1
+            self.timer_simu.Start(1000)
+            delta = datetime.timedelta(days=1)
+            ed_time = self.latestData.date
+            st_time = ed_time - delta
+            self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
+            self.steamingDisp()
+            self.bSimuCon.Disable()
+            self.bSimuCon.Hide()
+            self.bSimuDiscon.Enable()
+            self.bSimuDiscon.Show()
+            self.bConDev.Disable()
 
     def OnClickSimuDiscon(self, evt):
         self.timer_simu.Stop()
@@ -350,6 +354,9 @@ class ICPFrame(wx.Frame):
 
     def OnClick5MinView(self, evt):
         self.dateDelta = datetime.timedelta(minutes=4, seconds=59, microseconds=500)
+
+    def OnClickRtnCon(self, evt):
+        pass
 
 class ICPApp(wx.App):
     def OnInit(self):

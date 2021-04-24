@@ -15,10 +15,12 @@ from uiframe import PntModifyFrame as PntModFrame
 
 
 class MainFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
-                 style=wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 850),
+                 style=wx.DEFAULT_FRAME_STYLE^wx.RESIZE_BORDER, d_id=0):
+        self.d_id = d_id
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.InitUI()
+
 
     def InitUI(self):
         self.SetBackgroundColour('white')
@@ -34,9 +36,12 @@ class MainFrame(wx.Frame):
         self.axLen  = 0              # 长度
         self.axRange = [0, 10000]    # 显示范围
         self.dataLen = 0             # 数据总长度
+        self.cons:list[Cons] = None
+        self.conIdx = -1
 
         # 患者信息控件
-        self.lPntInfo = wx.StaticText(self.panel, label="患者信息", pos=(960, 50))
+        self.lPntInfo = wx.StaticText(self.panel, label="患者信息", pos=(980, 50))
+        self.lPntInfo.SetFont(wx.Font(20, wx.SWISS, wx.NORMAL, wx.NORMAL))
         # pntInfoBox = wx.BoxSizer(wx.VERTICAL)
         # hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.lId = wx.StaticText(self.panel, label='ID：', pos=(900, 80))
@@ -66,16 +71,30 @@ class MainFrame(wx.Frame):
         self.tSymp = wx.TextCtrl(self.panel, size=(240, 100), pos=(940, 420), style=wx.TE_MULTILINE)
         self.lDiag = wx.StaticText(self.panel, label='诊断：', pos=(900, 530))
         self.tDiag = wx.TextCtrl(self.panel, size=(240, 100), pos=(940, 530), style=wx.TE_MULTILINE)
-        self.lDate = wx.StaticText(self.panel, label='日期：', pos=(900, 680))
-        self.tDate = wx.StaticText(self.panel, label=str(datetime.date.today()), pos=(940, 680))
+        self.lDate = wx.StaticText(self.panel, label='日期：', pos=(900, 660))
+        self.tDate = wx.StaticText(self.panel, label=str(datetime.date.today()), pos=(940, 660))
+        self.bFront = wx.Button(self.panel, label='前一次', pos=(1040, 640))
+        self.bNext = wx.Button(self.panel, label='后一次', pos=(1040, 670))
+        self.bNext.Disable()
+        self.bToday = wx.Button(self.panel, label='回到今天', pos=(1040, 700))
         self.bSave = wx.Button(self.panel, label='保  存', pos=(940, 740))
         self.bClear = wx.Button(self.panel, label='清  除', pos=(1060, 740))
+
+        self.lDocName = wx.StaticText(self.panel, label='就诊医生：', pos=(1040, 780))
+        self.tDocName = wx.StaticText(self.panel, label='刘医生', pos=(1100, 780))
+        if self.d_id != 0:
+            self.tDocName.SetLabel(DBHelper.getDocName(self.d_id))
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
         self.bClear.Bind(wx.EVT_BUTTON, self.OnClickClear)
         self.bSave.Bind(wx.EVT_BUTTON, self.OnClickSave)
+        self.bNext.Bind(wx.EVT_BUTTON, self.OnClickNext)
+        self.bFront.Bind(wx.EVT_BUTTON, self.OnClickFront)
+        self.bToday.Bind(wx.EVT_BUTTON, self.OnClickToday)
 
         # 波形图
+        self.lTitle = wx.StaticText(self.panel, label='就诊系统', pos=(500, 30))
+        self.lTitle.SetFont(wx.Font(36, wx.SWISS, wx.NORMAL, wx.NORMAL))
         data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
         scores = []
         for i in data:
@@ -85,29 +104,33 @@ class MainFrame(wx.Frame):
         self.dataLen = len(scores)
         self.axes = self.panel.figure.add_subplot(111)
         self.panel.figure.subplots_adjust(left=0.1, bottom=0.4, right=0.7, top=0.9 )
-        self.axes.plot(self.t_score, self.s_score, 'k')
+        # self.axes.plot(self.t_score, self.s_score, 'k')
+        self.axes.plot([], [], 'k')
         self.axes.grid(True)
         self.axes.set_xlabel('Time')
         self.axes.set_ylabel('ICP')
         self.axes.set_xlim(self.axRange)
+        self.axes.set_ylim([0, 30])
         self.panel.draw()
 
         # FigureCanvas(self.panel, -1, self.figure)
 
         # 滚动条相关
-        self.scrollBar = wx.ScrollBar(self.panel, id = -1, pos=(150, 600), size=(620, 20),
+        self.scrollBar = wx.ScrollBar(self.panel, id = -1, pos=(150, 550), size=(620, 20),
                                       style=wx.SB_HORIZONTAL)
         self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
         self.scrollBar.Bind(wx.EVT_SCROLL, self.OnScroll)
-        self.bSclSub = wx.Button(self.panel, label='-', pos=(130, 600), size=(20, 20))
-        self.bSclAdd = wx.Button(self.panel, label='+', pos=(770,600), size=(20, 20))
+        self.bSclSub = wx.Button(self.panel, label='-', pos=(130, 550), size=(20, 20))
+        self.bSclAdd = wx.Button(self.panel, label='+', pos=(770,550), size=(20, 20))
         self.bSclAdd.Bind(wx.EVT_BUTTON, self.OnClickAdd)
         self.bSclSub.Bind(wx.EVT_BUTTON, self.OnClickSub)
+        self.lICPTitile = wx.StaticText(self.panel, label='历史颅内压数据', pos=(400, 600))
+        self.lICPTitile.SetFont(wx.Font(20, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
         self.bCon = wx.Button(self.panel, label='连接设备', pos=(200, 700))
         self.bCon.Bind(wx.EVT_BUTTON, self.OnClickCon)
 
-        self.bModify = wx.Button(self.panel, label='修改信息', pos=(300, 700))
+        self.bModify = wx.Button(self.panel, label='修改患者信息', pos=(340, 700))
         self.bModify.Bind(wx.EVT_BUTTON, self.OnClickModify)
 
     # 刷新波形图
@@ -118,6 +141,7 @@ class MainFrame(wx.Frame):
         self.axes.cla()
         self.axes.grid(True)
         self.axes.set_xlim(self.axRange)
+        self.axes.set_ylim([0, 30])
         self.axes.plot(self.t_score, self.s_score, 'k')
         self.panel.draw()
         time.sleep(0.01)
@@ -137,6 +161,15 @@ class MainFrame(wx.Frame):
                 self.tAllergy.SetValue(ptData.allergy)
                 self.tMediHis.SetValue(ptData.medical_history)
                 self.tFamHis.SetValue(ptData.family_history)
+                self.cons = ptData.cons
+                if len(self.cons) == 0:
+                    self.bFront.Disable()
+                    self.bNext.Disable()
+                    self.bToday.Disable()
+                else:
+                    self.bFront.Enable()
+                    # self.bNext.Enable()
+                    self.bToday.Enable()
                 # self.tDiag.SetValue(ptData.cons[0].diag)
                 # self.tSymp.SetValue(ptData.cons[0].sx)
                 # self.tDate.SetLabel(str(ptData.cons[0].date))
@@ -150,23 +183,24 @@ class MainFrame(wx.Frame):
     def OnClickSave(self, event):
         symp = self.tSymp.GetValue()
         diag = self.tDiag.GetValue()
-        cons = Cons(datetime.date.today(), symp, diag)
-        DBHelper.addPtCons(self.pId, cons)
-        wx.MessageBox("保存成功！")
+        if symp == '' or diag == '':
+            wx.MessageBox("就诊内容不能为空!")
+        else:
+            cons = Cons(datetime.date.today(), symp, diag)
+            DBHelper.addPtCons(self.pId, cons)
+            wx.MessageBox("保存成功！")
 
     # 滚动条响应
     def OnScroll(self, event):
         self.sclPos = self.scrollBar.GetThumbPosition()
         self.refresh()
-        # time.sleep(0.05)
-        # print(self.sclPos)
 
     # +按钮响应
     def OnClickAdd(self, event):
 
         self.sclSize -= 100
         if self.sclSize < 100:
-            self.sclSize = 100
+            self.sclSize = 50
         self.scrollBar.SetScrollbar(self.sclPos, self.sclSize, self.SCLLEN, self.sclSize)
         self.refresh()
 
@@ -182,18 +216,59 @@ class MainFrame(wx.Frame):
 
     def OnClickCon(self, evt):
         self.Close(True)
-        ICPFrame.main()
+        f = ICPFrame.ICPFrame(p_id=int(self.tId.GetValue()))
+        f.Show()
 
     def OnClickModify(self, evt):
-        # PntModifyFrame.main(self, id)
         frame = PntModFrame.PntModifyFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450),
                                            p_id=self.tId.GetValue())
         frame.Show()
 
+    def OnClickFront(self, evt):
+        self.conIdx += 1
+        if self.conIdx == len(self.cons) - 1:
+            self.bFront.Disable()
+        else:
+            self.bNext.Enable()
+        self.tDiag.SetValue(self.cons[self.conIdx].diag)
+        self.tSymp.SetValue(self.cons[self.conIdx].sx)
+        self.tDate.SetLabel(str(self.cons[self.conIdx].date.date()))
+        self.bClear.Disable()
+        self.bSave.Disable()
+
+
+    def OnClickNext(self, evt):
+        self.conIdx -= 1
+        if self.conIdx == -1:
+            self.bNext.Disable()
+            self.tDiag.SetValue("")
+            self.tSymp.SetValue("")
+            self.tDate.SetLabel(str(datetime.date.today()))
+            self.bClear.Enable()
+            self.bSave.Enable()
+        else:
+            self.tDiag.SetLabel(self.cons[self.conIdx].diag)
+            self.tSymp.SetLabel(self.cons[self.conIdx].sx)
+            self.tDate.SetLabel(str(self.cons[self.conIdx].date.date()))
+            self.bFront.Enable()
+            self.bClear.Disable()
+            self.bSave.Disable()
+
+
+    def OnClickToday(self, evt):
+        self.conIdx = -1
+        self.bNext.Disable()
+        self.tDiag.SetValue("")
+        self.tSymp.SetValue("")
+        self.tDate.SetLabel(str(datetime.date.today()))
+        self.bClear.Enable()
+        self.bSave.Enable()
+
+
 class MainApp(wx.App):
     def OnInit(self):
         style = wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER
-        self.frame = MainFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 900), style=style)
+        self.frame = MainFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 850), style=style)
         self.frame.Show()
         return True
 
