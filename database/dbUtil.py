@@ -2,6 +2,7 @@
 import pymysql
 import datetime
 from util.DS import *
+from util.dataproc import load, save
 
 
 class MySQLHelper:
@@ -186,5 +187,22 @@ class MySQLHelper:
                    height, weight, blood_type, tel, medical_history, id]
         row = self.exec(sql, params)
         return True
+
+    def addIcp(self, id, path, date:datetime):
+        sql = 'INSERT into icp_tbl (p_id,i_date,i_data) values(%s,%s,%s)'
+        params = [id, date, path]
+        self.exec(sql, params)
+
+    def getIcp(self, id):
+        sql = 'SELECT i_data,i_date from icp_tbl where p_id = %s'
+        params = [id]
+        rows = self.fetchall(sql, params)
+        rows = list(rows)
+        icp_path:list[str] = []
+        rows.sort(key=lambda x: x[1], reverse=True)
+        for res in rows:
+            icp_path.append(res[0])
+        return icp_path
+
 
 DBHelper = MySQLHelper()

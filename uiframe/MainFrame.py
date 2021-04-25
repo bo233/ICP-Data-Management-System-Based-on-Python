@@ -16,8 +16,9 @@ from uiframe import PntModifyFrame as PntModFrame
 
 class MainFrame(wx.Frame):
     def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 850),
-                 style=wx.DEFAULT_FRAME_STYLE^wx.RESIZE_BORDER, d_id=0):
+                 style=wx.DEFAULT_FRAME_STYLE^wx.RESIZE_BORDER, d_id=-1, p_id=-1):
         self.d_id = d_id
+        self.p_id = p_id
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.InitUI()
 
@@ -82,7 +83,7 @@ class MainFrame(wx.Frame):
 
         self.lDocName = wx.StaticText(self.panel, label='就诊医生：', pos=(1040, 780))
         self.tDocName = wx.StaticText(self.panel, label='刘医生', pos=(1100, 780))
-        if self.d_id != 0:
+        if self.d_id != -1:
             self.tDocName.SetLabel(DBHelper.getDocName(self.d_id))
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
@@ -95,7 +96,7 @@ class MainFrame(wx.Frame):
         # 波形图
         self.lTitle = wx.StaticText(self.panel, label='就诊系统', pos=(500, 30))
         self.lTitle.SetFont(wx.Font(36, wx.SWISS, wx.NORMAL, wx.NORMAL))
-        data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
+        data = readSD("/Users/bo233/Projects/Graduation-Project/data/data.dat")
         scores = []
         for i in data:
             scores.append(i.icp)
@@ -215,7 +216,7 @@ class MainFrame(wx.Frame):
         self.refresh()
 
     def OnClickCon(self, evt):
-        self.Close(True)
+        # self.Close(True)
         f = ICPFrame.ICPFrame(p_id=int(self.tId.GetValue()))
         f.Show()
 
@@ -258,6 +259,7 @@ class MainFrame(wx.Frame):
     def OnClickToday(self, evt):
         self.conIdx = -1
         self.bNext.Disable()
+        self.bFront.Enable()
         self.tDiag.SetValue("")
         self.tSymp.SetValue("")
         self.tDate.SetLabel(str(datetime.date.today()))
@@ -268,7 +270,7 @@ class MainFrame(wx.Frame):
 class MainApp(wx.App):
     def OnInit(self):
         style = wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER
-        self.frame = MainFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 850), style=style)
+        self.frame = MainFrame(id=-1)
         self.frame.Show()
         return True
 

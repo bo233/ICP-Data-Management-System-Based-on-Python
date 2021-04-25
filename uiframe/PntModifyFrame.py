@@ -51,7 +51,7 @@ class PntModifyFrame(wx.Frame):
         self.bCancel.Bind(wx.EVT_BUTTON, self.OnClickCancel)
         self.bOK.Bind(wx.EVT_BUTTON, self.OnClickOK)
 
-        data = DBHelper.getPtInfo(self.p_id)
+        data = DBHelper.getPtData(self.p_id)
         self.tName.SetValue(data.name)
         self.tAge.SetValue(str(data.age))
         self.tHeight.SetValue(str(data.height))

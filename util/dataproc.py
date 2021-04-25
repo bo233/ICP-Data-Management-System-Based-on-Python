@@ -3,16 +3,16 @@ from util.COM import COMHelper
 from util.COM import COMConst as COM
 from struct import *
 import queue
+import pickle
 
 
-def read(path):
+def readSD(path):
     dataList = []
     file = open(path,"rb")
     while True:
         line = file.read(16)
         if not line:
             break
-
         sNum = line[0:4]
         sYear = line[4:6]
         m = line[6]
@@ -33,6 +33,17 @@ def read(path):
 
     file.close()
     return dataList
+
+def load(path):
+    f = open(path, 'rb')
+    data = pickle.load(f)
+    f.close()
+    return data
+
+def save(data, path):
+    f = open(path, 'wb+')
+    pickle.dump(data, f)
+    f.close()
 
 
 class DataHelper:
