@@ -35,10 +35,13 @@ class MainFrame(wx.Frame):
         self.sclSize = 100           # 滑块大小
         self.SCLLEN = 1000           # 滑块总长度
         self.axLen  = 0              # 长度
-        self.axRange = [0, 10000]    # 显示范围
+        self.axRange = [0, 0]    # 显示范围
         self.dataLen = 0             # 数据总长度
-        self.cons:list[Cons] = None
+        self.cons:list[Cons] = []
+        self.icpPaths:list[str] = []
+        self.icpDatas:list[Data] = []
         self.conIdx = -1
+        self.icpIdx = -1
 
         # 患者信息控件
         self.lPntInfo = wx.StaticText(self.panel, label="患者信息", pos=(980, 50))
@@ -85,6 +88,9 @@ class MainFrame(wx.Frame):
         self.tDocName = wx.StaticText(self.panel, label='刘医生', pos=(1100, 780))
         if self.d_id != -1:
             self.tDocName.SetLabel(DBHelper.getDocName(self.d_id))
+        if self.p_id != -1:
+            self.tId.SetValue(str(self.p_id))
+            self.OnClickId(None)
 
         self.bId.Bind(wx.EVT_BUTTON, self.OnClickId)
         self.bClear.Bind(wx.EVT_BUTTON, self.OnClickClear)
@@ -96,13 +102,16 @@ class MainFrame(wx.Frame):
         # 波形图
         self.lTitle = wx.StaticText(self.panel, label='就诊系统', pos=(500, 30))
         self.lTitle.SetFont(wx.Font(36, wx.SWISS, wx.NORMAL, wx.NORMAL))
-        data = readSD("/Users/bo233/Projects/Graduation-Project/data/data.dat")
-        scores = []
-        for i in data:
-            scores.append(i.icp)
-        self.t_score = numpy.arange(1, len(scores) + 1, 1)
-        self.s_score = numpy.array(scores)
-        self.dataLen = len(scores)
+        # data = readSD("/Users/bo233/Projects/Graduation-Project/data/data.dat")
+        # scores = []
+        # for i in data:
+        #     scores.append(i.icp)
+        # self.t_score = numpy.arange(1, len(scores) + 1, 1)
+        # self.s_score = numpy.array(scores)
+        self.dates = []
+        self.icps = []
+        self.icts = []
+        self.dataLen = 0
         self.axes = self.panel.figure.add_subplot(111)
         self.panel.figure.subplots_adjust(left=0.1, bottom=0.4, right=0.7, top=0.9 )
         # self.axes.plot(self.t_score, self.s_score, 'k')
@@ -143,7 +152,7 @@ class MainFrame(wx.Frame):
         self.axes.grid(True)
         self.axes.set_xlim(self.axRange)
         self.axes.set_ylim([0, 30])
-        self.axes.plot(self.t_score, self.s_score, 'k')
+        self.axes.plot(self.dates, self.icps, 'k')
         self.panel.draw()
         time.sleep(0.01)
 
@@ -163,6 +172,7 @@ class MainFrame(wx.Frame):
                 self.tMediHis.SetValue(ptData.medical_history)
                 self.tFamHis.SetValue(ptData.family_history)
                 self.cons = ptData.cons
+                self.icpPaths = ptData.icpPath
                 if len(self.cons) == 0:
                     self.bFront.Disable()
                     self.bNext.Disable()
@@ -216,7 +226,7 @@ class MainFrame(wx.Frame):
         self.refresh()
 
     def OnClickCon(self, evt):
-        # self.Close(True)
+        self.Close(True)
         f = ICPFrame.ICPFrame(p_id=int(self.tId.GetValue()))
         f.Show()
 
@@ -229,6 +239,10 @@ class MainFrame(wx.Frame):
         self.conIdx += 1
         if self.conIdx == len(self.cons) - 1:
             self.bFront.Disable()
+            self.dates = []
+            self.icps = []
+            self.icts = []
+            self.refresh()
         else:
             self.bNext.Enable()
         self.tDiag.SetValue(self.cons[self.conIdx].diag)
@@ -236,6 +250,24 @@ class MainFrame(wx.Frame):
         self.tDate.SetLabel(str(self.cons[self.conIdx].date.date()))
         self.bClear.Disable()
         self.bSave.Disable()
+
+        # self.icpIdx += 1
+        # if self.icpIdx < len(self.icpPaths):
+        #     self.icpDatas = load(self.icpPaths[self.icpIdx])
+        #     self.dates = []
+        #     self.icps = []
+        #     self.icts = []
+        #     if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
+        #         for i in self.icpDatas:
+        #             self.dates.append(i.date)
+        #             self.icps.append(i.icp)
+        #             self.icts.append(i.ict)
+        #     else:
+        #         self.icpIdx -= 1
+        #
+        # self.refresh()
+
+
 
 
     def OnClickNext(self, evt):
@@ -247,6 +279,10 @@ class MainFrame(wx.Frame):
             self.tDate.SetLabel(str(datetime.date.today()))
             self.bClear.Enable()
             self.bSave.Enable()
+            self.dates = []
+            self.icps = []
+            self.icts = []
+            self.refresh()
         else:
             self.tDiag.SetLabel(self.cons[self.conIdx].diag)
             self.tSymp.SetLabel(self.cons[self.conIdx].sx)
@@ -254,6 +290,23 @@ class MainFrame(wx.Frame):
             self.bFront.Enable()
             self.bClear.Disable()
             self.bSave.Disable()
+
+        # self.icpIdx -= 1
+        # if self.icpIdx >= 0:
+        #     self.icpDatas = load(self.icpPaths[self.icpIdx])
+        #     self.dates = []
+        #     self.icps = []
+        #     self.icts = []
+        #     if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
+        #         for i in self.icpDatas:
+        #             self.dates.append(i.date)
+        #             self.icps.append(i.icp)
+        #             self.icts.append(i.ict)
+        #     else:
+        #         self.icpIdx += 1
+        #
+        # self.refresh()
+
 
 
     def OnClickToday(self, evt):
@@ -265,6 +318,10 @@ class MainFrame(wx.Frame):
         self.tDate.SetLabel(str(datetime.date.today()))
         self.bClear.Enable()
         self.bSave.Enable()
+        self.dates = []
+        self.icps = []
+        self.icts = []
+        self.refresh()
 
 
 class MainApp(wx.App):

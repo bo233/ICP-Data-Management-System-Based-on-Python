@@ -50,7 +50,7 @@ class DataHelper:
     def __init__(self, com='/dev/cu.usbserial-14310', bps=115200, timeout=5):
         self.com = COMHelper(com, bps, timeout)
         self.rtnQue = queue.Queue()
-        self.devNo = 0
+        self.devNo = 1
 
     def handle(self):
         cmd, data = self.com.receive()
@@ -129,7 +129,7 @@ class DataHelper:
         # AB CD 47 01 NN(1) SS SS EE FF
         # 数据内容：设备号(NN)
         elif cmd == COM.REC_PingRsq:
-            pass
+            self.rtnQue.put((const.PING, None))
 
         # 时间同步
         # AB CD 48 01 NN(1) SS SS EE FF
@@ -225,6 +225,7 @@ class const:
     DATA = 1
     BATTERY = 2
     OFF = 3
+    PING = 4
 
 if __name__ == "__main__":
     # data = read("/Users/bo233/Projects/Graduation-Project/data/data.dat")
@@ -235,4 +236,4 @@ if __name__ == "__main__":
     while True:
         dHelper.handle()
         state, rtn = dHelper.getRtn()
-        print("state: ",state, " return: ",rtn)
+        # print("state: ",state, " return: ",rtn)

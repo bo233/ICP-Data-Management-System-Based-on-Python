@@ -160,13 +160,13 @@ class COMHelper:
                     elif flag == 2:
                         readbuf = self.read()
                         dataSize = int(readbuf.hex(), 16)
-                        print(dataSize)
+                        # print(dataSize)
                         checkSum += dataSize
                         flag += 1
                     # 数据内容
                     elif flag == 3:
                         readbuf = self.read(dataSize)
-                        print('receive:',readbuf)
+                        # print('receive:',readbuf)
                         data = readbuf
                         checkSum += int(readbuf.hex(), 16) & 0xffff
                         flag += 1
@@ -214,17 +214,22 @@ class COMHelper:
         snd += pack('B', size)
         # self.write(data)
         snd += data
-        checkSum += int.from_bytes(data, byteorder='little') & 0xffff
+        for i in data:
+            checkSum += i
         checkSum = checkSum & 0xffff
         # self.write(pack("=H", checkSum))
-        snd += pack("=H", checkSum)
+        # print('check sum:',checkSum)
+        snd += pack("H", checkSum)
         # self.write(chr(0xee).encode("utf-8"))
         # self.write(chr(0xff).encode("utf-8"))
         # self.write(b'\xee\xff')
         snd += b'\xee\xff'
-        print(cmd, data)
-        print('send:', snd)
+        # print(cmd, data)
+        # print('send:', snd)
         self.write(snd)
+
+    def close(self):
+        self.ser.close()
 
 if __name__ == '__main__':
     cHelper = COMHelper('/dev/cu.usbserial-14310', 115200, 5)

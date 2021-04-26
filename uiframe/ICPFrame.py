@@ -101,7 +101,7 @@ class ICPFrame(wx.Frame):
 
 
         # 功能区
-        y = 730
+        y = 760
         self.bConDev = GenButton(self.panel, label='连接设备', pos=(100, y), style=wx.BORDER_NONE)
         self.bConDev.SetForegroundColour('white')
         self.bConDev.SetBackgroundColour('#707070')
@@ -120,6 +120,7 @@ class ICPFrame(wx.Frame):
         self.bDisconDev = GenButton(self.panel, label='断开连接', pos=(550, y), style=wx.BORDER_NONE)
         self.bDisconDev.SetForegroundColour('white')
         self.bDisconDev.SetBackgroundColour('#707070')
+        self.bDisconDev.Bind(wx.EVT_BUTTON, self.OnClickDiscon)
 
         self.bSimuCon = GenButton(self.panel, label='从SD卡读取', pos=(700, y), style=wx.BORDER_NONE)
         self.bSimuCon.SetForegroundColour('white')
@@ -252,7 +253,10 @@ class ICPFrame(wx.Frame):
             elif state == const.OFF:
                 self.timer_hnd.Stop()
                 self.ani.event_source.stop()
+                self.bConDev.Enable()
                 wx.MessageBox('颅内压测量仪器已关机！')
+            elif state == const.PING:
+                pass
 
 
     def simuHandle(self, evt):
@@ -284,8 +288,9 @@ class ICPFrame(wx.Frame):
         self.icps[-1] = self.latestData.icp
         self.dates[:] = numpy.roll(self.dates, -1)
         self.dates[-1] = mdates.date2num(self.latestData.date)
+        if self.latestData.icp >= self.alarmThreshold:
+            pass
 
-        # print(str(self.latestData.date), self.dates[-1], self.icps[-1])
         self.line.set_data(self.dates, self.icps)
         self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
         self.tICP.SetLabel(str(self.latestData.icp))
@@ -313,6 +318,7 @@ class ICPFrame(wx.Frame):
                 self.dates = mdates.drange(st_time, ed_time, datetime.timedelta(seconds=1))
                 self.steamingDisp()
                 self.bSimuCon.Disable()
+                self.bConDev.Disable()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')
@@ -373,8 +379,15 @@ class ICPFrame(wx.Frame):
             path += '/' + str(self.datas[0].date.date()) + '.dat'
             save(self.datas, path)
             DBHelper.addIcp(str(self.p_id), path, self.datas[0].date)
-            # f = MainFrame(p_id=self.p_id)
-            # f.Show()
+            f = MainFrame(p_id=self.p_id)
+            f.Show()
+
+    def OnClickDiscon(self, evt):
+        DBHelper.conn.close()
+        self.timer_hnd.Stop()
+        self.ani.event_source.stop()
+        self.bConDev.Enable()
+
 
 
 class ICPApp(wx.App):
