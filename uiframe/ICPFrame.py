@@ -19,7 +19,7 @@ from util.DS import *
 from database.dbUtil import DBHelper
 from wx.lib.buttons import GenButton
 from util.dataproc import *
-from uiframe.MainFrame import MainFrame
+from uiframe import MainFrame
 # from  util.Data import *
 # import util.Data
 # import matplotlib
@@ -379,7 +379,7 @@ class ICPFrame(wx.Frame):
             path += '/' + str(self.datas[0].date.date()) + '.dat'
             save(self.datas, path)
             DBHelper.addIcp(str(self.p_id), path, self.datas[0].date)
-            f = MainFrame(p_id=self.p_id)
+            f = MainFrame.MainFrame(p_id=self.p_id)
             f.Show()
 
     def OnClickDiscon(self, evt):
@@ -392,8 +392,7 @@ class ICPFrame(wx.Frame):
 
 class ICPApp(wx.App):
     def OnInit(self):
-        style = wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER
-        self.frame = ICPFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(1200, 900), style=style)
+        self.frame = ICPFrame()
         self.frame.Show()
         return True
 

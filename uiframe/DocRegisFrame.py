@@ -3,12 +3,12 @@
 import wx
 import hashlib
 from uiframe.MainFrame import MainApp
-import uiframe.DocLoginFrame as LoginFrame
+from uiframe import DocLoginFrame
 from database.dbUtil import DBHelper
 
 
 class DocRegisFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 350),
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -38,7 +38,8 @@ class DocRegisFrame(wx.Frame):
 
     def OnClickCancel(self, event):
         self.Close(True)
-        LoginFrame.main()
+        f = DocLoginFrame.DocRegisFrame()
+        f.Show()
 
     # 登陆
     def OnClickReg(self, event):
@@ -67,7 +68,7 @@ class DocRegisFrame(wx.Frame):
 
 class DocRegisApp(wx.App):
     def OnInit(self):
-        self.frame = DocRegisFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 350))
+        self.frame = DocRegisFrame()
         self.frame.Show()
         return True
 

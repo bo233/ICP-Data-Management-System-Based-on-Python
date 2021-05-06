@@ -78,9 +78,11 @@ class MainFrame(wx.Frame):
         self.lDate = wx.StaticText(self.panel, label='日期：', pos=(900, 660))
         self.tDate = wx.StaticText(self.panel, label=str(datetime.date.today()), pos=(940, 660))
         self.bFront = wx.Button(self.panel, label='前一次', pos=(1040, 640))
+        self.bFront.Disable()
         self.bNext = wx.Button(self.panel, label='后一次', pos=(1040, 670))
         self.bNext.Disable()
         self.bToday = wx.Button(self.panel, label='回到今天', pos=(1040, 700))
+        self.bToday.Disable()
         self.bSave = wx.Button(self.panel, label='保  存', pos=(940, 740))
         self.bClear = wx.Button(self.panel, label='清  除', pos=(1060, 740))
 

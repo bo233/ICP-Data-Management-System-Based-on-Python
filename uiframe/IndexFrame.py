@@ -6,7 +6,7 @@ from uiframe import DocLoginFrame, PntLoginFrame
 
 
 class IndexFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300),
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -26,16 +26,18 @@ class IndexFrame(wx.Frame):
 
     def OnClickPnt(self, event):
         self.Close(True)
-        PntLoginFrame.main()
+        f = PntLoginFrame.PntLoginFrame()
+        f.Show()
 
     def OnClickDoc(self, event):
         self.Close(True)
-        DocLoginFrame.main()
+        f = DocLoginFrame.DocLoginFrame()
+        f.Show()
 
 
 class IndexFrameApp(wx.App):
     def OnInit(self):
-        self.frame = IndexFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300))
+        self.frame = IndexFrame()
         self.frame.Show()
         return True
 

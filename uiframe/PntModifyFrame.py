@@ -5,7 +5,7 @@ from database.dbUtil import DBHelper
 
 
 class PntModifyFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450),
                  style=wx.DEFAULT_FRAME_STYLE^wx.RESIZE_BORDER, p_id=-1):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
         self.p_id = p_id
@@ -110,7 +110,7 @@ class PntModifyFrame(wx.Frame):
 
 class PntModifyFrameApp(wx.App):
     def OnInit(self):
-        self.frame = PntModifyFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450))
+        self.frame = PntModifyFrame()
         self.frame.Show()
         return True
 

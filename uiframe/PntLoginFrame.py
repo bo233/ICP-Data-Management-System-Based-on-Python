@@ -8,7 +8,7 @@ from database.dbUtil import DBHelper
 
 
 class PntLoginFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300),
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -36,7 +36,8 @@ class PntLoginFrame(wx.Frame):
     # 注册
     def OnClickReg(self, event):
         self.Close(True)
-        PntRegisFrame.main()
+        f = PntRegisFrame.PntRegisFrame()
+        f.Show()
 
     # 登陆
     def OnClickLogin(self, event):
@@ -51,14 +52,15 @@ class PntLoginFrame(wx.Frame):
         elif DBHelper.ptLoginCheck(name, encode):
                 wx.MessageBox("登陆成功！")
                 self.Close(True)
-                MainFrame.main()
+                f = MainFrame.MainFrame()
+                f.Show()
         else:
             wx.MessageBox("用户名或密码错误！")
 
 
 class PntLoginApp(wx.App):
     def OnInit(self):
-        self.frame = PntLoginFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300))
+        self.frame = PntLoginFrame()
         self.frame.Show()
         return True
 

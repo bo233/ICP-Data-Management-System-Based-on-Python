@@ -194,6 +194,8 @@ class COMHelper:
                         # data = self.main_engine.read(self.main_engine.in_waiting).decode("utf-8")#方式一
                         # data = self.ser.read_all()  # 方式二
                         # print("接收ascii数据：", data)
+                else:
+                    pass
             except Exception as e:
                 print("Exception:", e)
 

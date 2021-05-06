@@ -2,13 +2,13 @@
 
 import wx
 import hashlib
-from uiframe.MainFrame import MainApp
+from uiframe import MainFrame
 from uiframe import DocRegisFrame
 from database.dbUtil import DBHelper
 
 
 class DocLoginFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300),
                  style=wx.DEFAULT_FRAME_STYLE):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -33,7 +33,8 @@ class DocLoginFrame(wx.Frame):
     # 注册
     def OnClickReg(self, event):
         self.Close(True)
-        DocRegisFrame.main()
+        f = DocRegisFrame.DocRegisFrame()
+        f.Show()
 
     # 登陆
     def OnClickLogin(self, event):
@@ -48,15 +49,15 @@ class DocLoginFrame(wx.Frame):
         elif DBHelper.docLoginCheck(name, encode):
                 wx.MessageBox("登陆成功！")
                 self.Close(True)
-                app = MainApp()
-                app.MainLoop()
+                f = MainFrame.MainFrame()
+                f.Show()
         else:
             wx.MessageBox("用户名或密码错误！")
 
 
 class DocLoginApp(wx.App):
     def OnInit(self):
-        self.frame = DocLoginFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(500, 300))
+        self.frame = DocLoginFrame()
         self.frame.Show()
         return True
 

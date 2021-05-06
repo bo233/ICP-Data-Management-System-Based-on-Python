@@ -2,13 +2,13 @@
 
 import wx
 import hashlib
-import uiframe.PntLoginFrame as LoginFrame
+from uiframe import PntLoginFrame
 from database.dbUtil import DBHelper
 
 
 class PntRegisFrame(wx.Frame):
-    def __init__(self, parent=None, id=-1, title='', pos=wx.DefaultSize, size=wx.DefaultSize,
-                 style=wx.DEFAULT_FRAME_STYLE):
+    def __init__(self, parent=None, id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450),
+                 style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.InitUI()
@@ -57,7 +57,9 @@ class PntRegisFrame(wx.Frame):
 
     def OnClickCancel(self, event):
         self.Close(True)
-        LoginFrame.main()
+        f = PntLoginFrame.PntLoginFrame()
+        f.Show()
+
 
     # 登陆
     def OnClickReg(self, event):
@@ -95,14 +97,15 @@ class PntRegisFrame(wx.Frame):
             if id is not None:
                 wx.MessageBox("注册成功！您的ID为：%d"%(id))
                 self.Close(True)
-                LoginFrame.main()
+                f = PntLoginFrame.PntLoginFrame()
+                f.Show()
             else:
                 wx.MessageBox("注册失败，请重试。")
 
 
 class PntRegisApp(wx.App):
     def OnInit(self):
-        self.frame = PntRegisFrame(id=-1, title='颅内压数据管理系统', pos=(3600, 240), size=(850, 450))
+        self.frame = PntRegisFrame()
         self.frame.Show()
         return True
 
