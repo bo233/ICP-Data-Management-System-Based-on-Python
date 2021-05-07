@@ -38,7 +38,7 @@ class DocRegisFrame(wx.Frame):
 
     def OnClickCancel(self, event):
         self.Close(True)
-        f = DocLoginFrame.DocRegisFrame()
+        f = DocLoginFrame.DocLoginFrame()
         f.Show()
 
     # 登陆

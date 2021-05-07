@@ -4,6 +4,7 @@ import wx
 import numpy
 import gc
 import os
+import _thread
 import time
 import datetime
 import pickle
@@ -101,7 +102,7 @@ class ICPFrame(wx.Frame):
 
 
         # 功能区
-        y = 760
+        y = 740
         self.bConDev = GenButton(self.panel, label='连接设备', pos=(100, y), style=wx.BORDER_NONE)
         self.bConDev.SetForegroundColour('white')
         self.bConDev.SetBackgroundColour('#707070')
@@ -121,6 +122,7 @@ class ICPFrame(wx.Frame):
         self.bDisconDev.SetForegroundColour('white')
         self.bDisconDev.SetBackgroundColour('#707070')
         self.bDisconDev.Bind(wx.EVT_BUTTON, self.OnClickDiscon)
+        self.bDisconDev.Disable()
 
         self.bSimuCon = GenButton(self.panel, label='从SD卡读取', pos=(700, y), style=wx.BORDER_NONE)
         self.bSimuCon.SetForegroundColour('white')
@@ -153,6 +155,18 @@ class ICPFrame(wx.Frame):
         self.bMin5View.SetForegroundColour('white')
         self.bMin5View.SetBackgroundColour('#707070')
         self.bMin5View.Bind(wx.EVT_BUTTON, self.OnClick5MinView)
+
+        self.alarmHint = wx.StaticText(self.panel, label='⚠️ 颅内压已超过阈值，请注意！', pos=(310, 820))
+        self.alarmHint.SetFont(midFont)
+        self.alarmHint.SetForegroundColour(orange)
+        self.alarmHint.Hide()
+
+        self.bAlmCon = GenButton(self.panel, label='🔔', pos=(740, 815), size=(40,40), style=wx.BORDER_NONE)
+        self.bAlmCon.SetForegroundColour('white')
+        self.bAlmCon.SetFont(wx.Font(24, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.bAlmCon.SetBackgroundColour('#707070')
+        self.bAlmCon.Hide()
+        self.bAlmCon.Bind(wx.EVT_BUTTON, self.OnClickAlmCon)
 
 
         # ####### 波形图
@@ -289,7 +303,12 @@ class ICPFrame(wx.Frame):
         self.dates[:] = numpy.roll(self.dates, -1)
         self.dates[-1] = mdates.date2num(self.latestData.date)
         if self.latestData.icp >= self.alarmThreshold:
-            pass
+            self.alarmHint.Show()
+            self.bAlmCon.Show()
+            # duration = 5  # second
+            # freq = 440  # Hz
+            # os.system('play --no-show-progress --null --channels 1 synth %s sine %f' % (duration, freq))
+            _thread.start_new_thread(self.alarm, ())
 
         self.line.set_data(self.dates, self.icps)
         self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
@@ -298,6 +317,11 @@ class ICPFrame(wx.Frame):
         self.ax.set_xlim([mdates.date2num(self.latestData.date-self.dateDelta), self.dates[-1]])
         gc.collect()
         return self.line, self.p, self.ax.xaxis,
+
+    def alarm(self):
+        duration = 1  # second
+        freq = 440  # Hz
+        os.system('play --no-show-progress --null --channels 1 synth %s sine %f' % (duration, freq))
 
     # 开始实时显示
     def steamingDisp(self):
@@ -319,11 +343,12 @@ class ICPFrame(wx.Frame):
                 self.steamingDisp()
                 self.bSimuCon.Disable()
                 self.bConDev.Disable()
+                self.bDisconDev.Enable()
 
     def OnClickSetAlm(self, evt):
         dlg = wx.TextEntryDialog(self.panel, '输入报警阈值（mmHg）：', '设置报警阈值')
         if dlg.ShowModal() == wx.ID_OK:
-            self.alarmThreshold = dlg.GetValue()
+            self.alarmThreshold = int(dlg.GetValue())
         self.lAlarm.SetLabel('报警阈值：'+str(self.alarmThreshold))
         # self.ax.hlines(self.alarmThreshold, 0, 10000, color='#FF9912')
 
@@ -353,6 +378,10 @@ class ICPFrame(wx.Frame):
         self.bSimuDiscon.Hide()
         self.bSimuCon.Enable()
         self.bSimuCon.Show()
+
+    def OnClickAlmCon(self, evt):
+        self.alarmHint.Hide()
+        self.bAlmCon.Hide()
 
     def OnClickDayView(self, evt):
         self.dateDelta = datetime.timedelta(days=1)
@@ -387,6 +416,7 @@ class ICPFrame(wx.Frame):
         self.timer_hnd.Stop()
         self.ani.event_source.stop()
         self.bConDev.Enable()
+        self.bDisconDev.Disable()
 
 
 

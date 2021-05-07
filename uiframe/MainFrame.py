@@ -269,13 +269,13 @@ class MainFrame(wx.Frame):
                     self.icts.append(i.ict)
                 self.dates = list(range(0, len(self.icpDatas)))
                 self.dataLen = len(self.icps)
-                print('-------')
+                # print('-------')
             else:
                 self.icpIdx -= 1
         else:
             if self.icpIdx > len(self.icpPaths):
                 self.icpIdx = len(self.icpPaths)
-        print(self.icpIdx)
+        # print(self.icpIdx)
 
         self.refresh()
 
@@ -316,7 +316,7 @@ class MainFrame(wx.Frame):
                     self.icts.append(i.ict)
                 self.dates = list(range(0, len(self.icpDatas)))
                 self.dataLen = len(self.icps)
-                print('-------')
+                # print('-------')
             else:
                 self.icpIdx += 1
         else:
@@ -325,7 +325,7 @@ class MainFrame(wx.Frame):
             self.icts = []
             if self.icpIdx < -1:
                 self.icpIdx = -1
-        print(self.icpIdx)
+        # print(self.icpIdx)
 
         self.refresh()
 
