@@ -156,6 +156,8 @@ class MySQLHelper:
             ptData.cons.append(cons)
         ptData.cons.sort(key=lambda x:x.date, reverse=True)
 
+        ptData.icpPath = self.getIcp(id)
+
         return ptData
 
     # def getPtData(self, id:str):

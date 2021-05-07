@@ -175,6 +175,9 @@ class MainFrame(wx.Frame):
                 self.tFamHis.SetValue(ptData.family_history)
                 self.cons = ptData.cons
                 self.icpPaths = ptData.icpPath
+                print('print icp path:')
+                for i in self.icpPaths:
+                    print(i)
                 if len(self.cons) == 0:
                     self.bFront.Disable()
                     self.bNext.Disable()
@@ -253,21 +256,28 @@ class MainFrame(wx.Frame):
         self.bClear.Disable()
         self.bSave.Disable()
 
-        # self.icpIdx += 1
-        # if self.icpIdx < len(self.icpPaths):
-        #     self.icpDatas = load(self.icpPaths[self.icpIdx])
-        #     self.dates = []
-        #     self.icps = []
-        #     self.icts = []
-        #     if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
-        #         for i in self.icpDatas:
-        #             self.dates.append(i.date)
-        #             self.icps.append(i.icp)
-        #             self.icts.append(i.ict)
-        #     else:
-        #         self.icpIdx -= 1
-        #
-        # self.refresh()
+        self.icpIdx += 1
+        if self.icpIdx < len(self.icpPaths):
+            self.icpDatas = load(self.icpPaths[self.icpIdx])
+            self.dates = []
+            self.icps = []
+            self.icts = []
+            if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
+                for i in self.icpDatas:
+                    # self.dates.append(i.date)
+                    self.icps.append(i.icp)
+                    self.icts.append(i.ict)
+                self.dates = list(range(0, len(self.icpDatas)))
+                self.dataLen = len(self.icps)
+                print('-------')
+            else:
+                self.icpIdx -= 1
+        else:
+            if self.icpIdx > len(self.icpPaths):
+                self.icpIdx = len(self.icpPaths)
+        print(self.icpIdx)
+
+        self.refresh()
 
 
 
@@ -293,21 +303,31 @@ class MainFrame(wx.Frame):
             self.bClear.Disable()
             self.bSave.Disable()
 
-        # self.icpIdx -= 1
-        # if self.icpIdx >= 0:
-        #     self.icpDatas = load(self.icpPaths[self.icpIdx])
-        #     self.dates = []
-        #     self.icps = []
-        #     self.icts = []
-        #     if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
-        #         for i in self.icpDatas:
-        #             self.dates.append(i.date)
-        #             self.icps.append(i.icp)
-        #             self.icts.append(i.ict)
-        #     else:
-        #         self.icpIdx += 1
-        #
-        # self.refresh()
+        self.icpIdx -= 1
+        if self.icpIdx >= 0:
+            self.icpDatas = load(self.icpPaths[self.icpIdx])
+            self.dates = []
+            self.icps = []
+            self.icts = []
+            if self.icpDatas[0].date.date() == self.cons[self.conIdx].date.date():
+                for i in self.icpDatas:
+                    # self.dates.append(i.date)
+                    self.icps.append(i.icp)
+                    self.icts.append(i.ict)
+                self.dates = list(range(0, len(self.icpDatas)))
+                self.dataLen = len(self.icps)
+                print('-------')
+            else:
+                self.icpIdx += 1
+        else:
+            self.dates = []
+            self.icps = []
+            self.icts = []
+            if self.icpIdx < -1:
+                self.icpIdx = -1
+        print(self.icpIdx)
+
+        self.refresh()
 
 
 
@@ -320,6 +340,7 @@ class MainFrame(wx.Frame):
         self.tDate.SetLabel(str(datetime.date.today()))
         self.bClear.Enable()
         self.bSave.Enable()
+        self.icpIdx = -1
         self.dates = []
         self.icps = []
         self.icts = []
