@@ -206,5 +206,12 @@ class MySQLHelper:
             icp_path.append(res[0])
         return icp_path
 
+    def getAllPtNameId(self):
+        sql = 'SELECT p_name,p_id from patient_tbl'
+        params = []
+        rows = self.fetchall(sql, params)
+        rows = list(rows)
+        return rows
+
 
 DBHelper = MySQLHelper()

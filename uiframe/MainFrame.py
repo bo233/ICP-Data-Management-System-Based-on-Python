@@ -145,6 +145,12 @@ class MainFrame(wx.Frame):
         self.bModify = wx.Button(self.panel, label='修改患者信息', pos=(340, 700))
         self.bModify.Bind(wx.EVT_BUTTON, self.OnClickModify)
 
+        self.bSelectPt = wx.Button(self.panel, label='患者总览', pos=(480, 700))
+        self.bSelectPt.Bind(wx.EVT_BUTTON, self.OnClickSelectPt)
+
+        self.bModifyDoc = wx.Button(self.panel, label='修改医生信息', pos=(620, 700))
+        self.bModifyDoc.Bind(wx.EVT_BUTTON, self.OnClickModifyDoc)
+
     # 刷新波形图
     def refresh(self):
         l = self.dataLen * self.sclPos / self.SCLLEN
@@ -157,6 +163,17 @@ class MainFrame(wx.Frame):
         self.axes.plot(self.dates, self.icps, 'k')
         self.panel.draw()
         time.sleep(0.01)
+
+    def OnClickSelectPt(self, evt):
+        info = DBHelper.getAllPtNameId()
+        choices = []
+        for i in info:
+            choices.append(str(i[0])+'('+str(i[1])+')')
+        dlg = wx.SingleChoiceDialog(self.panel, '选择患者：', '患者总览', choices)
+        if dlg.ShowModal() == wx.ID_OK:
+            idx = dlg.GetSelection()
+            self.tId.SetValue(str(info[idx][1]))
+            self.OnClickId(None)
 
     # 查询ID按钮
     def OnClickId(self, event):
@@ -175,9 +192,9 @@ class MainFrame(wx.Frame):
                 self.tFamHis.SetValue(ptData.family_history)
                 self.cons = ptData.cons
                 self.icpPaths = ptData.icpPath
-                print('print icp path:')
-                for i in self.icpPaths:
-                    print(i)
+                # print('print icp path:')
+                # for i in self.icpPaths:
+                #     print(i)
                 if len(self.cons) == 0:
                     self.bFront.Disable()
                     self.bNext.Disable()
@@ -240,6 +257,9 @@ class MainFrame(wx.Frame):
                                            p_id=self.tId.GetValue())
         frame.Show()
 
+    def OnClickModifyDoc(self, evt):
+        pass
+
     def OnClickFront(self, evt):
         self.conIdx += 1
         if self.conIdx == len(self.cons) - 1:
@@ -278,8 +298,6 @@ class MainFrame(wx.Frame):
         # print(self.icpIdx)
 
         self.refresh()
-
-
 
 
     def OnClickNext(self, evt):
@@ -328,8 +346,6 @@ class MainFrame(wx.Frame):
         # print(self.icpIdx)
 
         self.refresh()
-
-
 
     def OnClickToday(self, evt):
         self.conIdx = -1
