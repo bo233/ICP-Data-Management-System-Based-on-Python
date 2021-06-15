@@ -2,7 +2,7 @@
 
 import wx
 import hashlib
-from uiframe import MainFrame
+from uiframe import PtMainFrame
 from uiframe import PntRegisFrame
 from database.dbUtil import DBHelper
 
@@ -52,7 +52,7 @@ class PntLoginFrame(wx.Frame):
         elif DBHelper.ptLoginCheck(name, encode):
                 wx.MessageBox("登陆成功！")
                 self.Close(True)
-                f = MainFrame.MainFrame()
+                f = PtMainFrame.PtMainFrame(p_id=int(name))
                 f.Show()
         else:
             wx.MessageBox("用户名或密码错误！")

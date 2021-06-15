@@ -53,6 +53,9 @@ class ICPFrame(wx.Frame):
         orange = (255, 153, 18)
         white = (210, 210, 210)
 
+        self.overThreshold = 0
+        self.cntOver = 3
+
         # 颅内压设备信息控件
         self.lICP = wx.StaticText(self.panel, label='ICP:', pos=(920, 120))
         self.lICP.SetFont(midFont)
@@ -136,6 +139,11 @@ class ICPFrame(wx.Frame):
         self.bSimuDiscon.Disable()
         self.bSimuDiscon.Hide()
 
+        self.bSetDur = GenButton(self.panel, label='持续时间设置', pos=(850, y), style=wx.BORDER_NONE)
+        self.bSetDur.SetForegroundColour('white')
+        self.bSetDur.SetBackgroundColour('#707070')
+        self.bSetDur.Bind(wx.EVT_BUTTON, self.OnClicksetDur)
+
         self.bDayView = GenButton(self.panel, label='天视图', pos=(100, 680), style=wx.BORDER_NONE)
         self.bDayView.SetForegroundColour('white')
         self.bDayView.SetBackgroundColour('#707070')
@@ -167,6 +175,8 @@ class ICPFrame(wx.Frame):
         self.bAlmCon.SetBackgroundColour('#707070')
         self.bAlmCon.Hide()
         self.bAlmCon.Bind(wx.EVT_BUTTON, self.OnClickAlmCon)
+
+
 
 
         # ####### 波形图
@@ -295,6 +305,7 @@ class ICPFrame(wx.Frame):
     #     label = x.strftime(fmt)
     #     return label
 
+
     # 流式显示时更新ICP数据
     def updataData(self, frame):
         # while True:
@@ -302,13 +313,19 @@ class ICPFrame(wx.Frame):
         self.icps[-1] = self.latestData.icp
         self.dates[:] = numpy.roll(self.dates, -1)
         self.dates[-1] = mdates.date2num(self.latestData.date)
+        ##############################################
+        ##############################################
         if self.latestData.icp >= self.alarmThreshold:
-            self.alarmHint.Show()
-            self.bAlmCon.Show()
-            # duration = 5  # second
-            # freq = 440  # Hz
-            # os.system('play --no-show-progress --null --channels 1 synth %s sine %f' % (duration, freq))
-            _thread.start_new_thread(self.alarm, ())
+            self.overThreshold += 1
+            if self.overThreshold >= self.cntOver:
+                self.alarmHint.Show()
+                self.bAlmCon.Show()
+                # duration = 5  # second
+                # freq = 440  # Hz
+                # os.system('play --no-show-progress --null --channels 1 synth %s sine %f' % (duration, freq))
+                _thread.start_new_thread(self.alarm, ())
+        else:
+            self.overThreshold = 0
 
         self.line.set_data(self.dates, self.icps)
         self.p = self.ax.fill_between(self.dates, self.icps, color='g', alpha=0.7)
@@ -326,6 +343,11 @@ class ICPFrame(wx.Frame):
     # 开始实时显示
     def steamingDisp(self):
         self.ani = animation.FuncAnimation(self.figure, self.updataData, interval=1000, blit=True, save_count=10)
+
+    def OnClicksetDur(self, evt):
+        dlg = wx.TextEntryDialog(self.panel, '输入持续时间（s），默认三秒：', '设置持续时间')
+        if dlg.ShowModal() == wx.ID_OK:
+            self.cntOver = int(dlg.GetValue())
 
     def OnClickConDev(self, evt):
         choices = COMHelper.getPorts()
@@ -412,7 +434,7 @@ class ICPFrame(wx.Frame):
             f.Show()
 
     def OnClickDiscon(self, evt):
-        DBHelper.conn.close()
+        self.dHelper.com.close()
         self.timer_hnd.Stop()
         self.ani.event_source.stop()
         self.bConDev.Enable()
